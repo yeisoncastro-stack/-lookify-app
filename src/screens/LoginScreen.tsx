@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
@@ -55,9 +56,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* Header de marca */}
         <View style={styles.header}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>L</Text>
-          </View>
+          <Image source={require('../../assets/logo-lookify.png')} style={styles.logo} />
           <Text style={styles.brand}>Lookify</Text>
           <Text style={styles.tagline}>Belleza a un toque de distancia</Text>
         </View>
@@ -139,28 +138,20 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     paddingHorizontal: spacing.lg,
   },
-  logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.full,
-    backgroundColor: colors.honey,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 80,
+    height: 80,
     marginBottom: spacing.sm,
-  },
-  logoText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.navy,
+    resizeMode: 'contain',
   },
   brand: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.white,
+    color: colors.honeyLight,
   },
   tagline: {
     fontSize: 13,
-    color: colors.textOnNavyMuted,
+    color: colors.honey,
     marginTop: spacing.xs,
   },
   card: {
