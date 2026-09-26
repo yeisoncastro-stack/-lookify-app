@@ -4,7 +4,15 @@
 // el de Profesional es más largo (categorías, certificaciones, portafolio).
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
 
@@ -29,34 +37,45 @@ export default function AccountTypeScreen({ navigation }: AccountTypeScreenProps
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Crear cuenta</Text>
-        <Text style={styles.subtitle}>¿Cómo quieres usar Lookify?</Text>
-      </View>
+      <View style={styles.screen}>
+        <View style={styles.header}>
+          <Image source={require('../../assets/logo-lookify.png')} style={styles.logo} />
+          <Text style={styles.brand}>Lookify</Text>
+          <Text style={styles.tagline}>Belleza a un toque de distancia</Text>
+          <Text style={styles.title}>Crear cuenta</Text>
+          <Text style={styles.subtitle}>¿Cómo quieres usar Lookify?</Text>
+        </View>
 
-      <View style={styles.body}>
-        <OptionCard
-          icon="person"
-          title="Soy cliente"
-          description="Quiero solicitar servicios a domicilio"
-          selected={selected === 'client'}
-          onPress={() => setSelected('client')}
-        />
-        <OptionCard
-          icon="scissors"
-          title="Soy profesional"
-          description="Quiero ofrecer mis servicios"
-          selected={selected === 'professional'}
-          onPress={() => setSelected('professional')}
-        />
+        <View style={styles.body}>
+          <ScrollView
+            contentContainerStyle={styles.bodyContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.mainGroup}>
+              <OptionCard
+                icon="person"
+                title="Soy cliente"
+                description="Quiero solicitar servicios a domicilio"
+                selected={selected === 'client'}
+                onPress={() => setSelected('client')}
+              />
+              <OptionCard
+                icon="scissors"
+                title="Soy profesional"
+                description="Quiero ofrecer mis servicios"
+                selected={selected === 'professional'}
+                onPress={() => setSelected('professional')}
+              />
+              <Button label="Continuar" onPress={handleContinue} style={styles.submitButton} />
+            </View>
 
-        <Button label="Continuar" onPress={handleContinue} style={{ marginTop: spacing.lg }} />
-
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.loginLink}>
-            ¿Ya tienes cuenta? <Text style={styles.loginLinkAccent}>Ingresar</Text>
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginLink}>
+                ¿Ya tienes cuenta? <Text style={styles.loginLinkAccent}>Ingresar</Text>
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -94,33 +113,67 @@ function OptionCard({ icon, title, description, selected, onPress }: OptionCardP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.navy,
+  },
+  screen: {
+    flex: 1,
   },
   header: {
-    backgroundColor: colors.navy,
-    paddingTop: spacing.xl,
-    paddingBottom: 40,
-    paddingHorizontal: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  logo: {
+    width: 76,
+    height: 76,
+    marginBottom: spacing.sm,
+    resizeMode: 'contain',
+  },
+  brand: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.honeyLight,
+  },
+  tagline: {
+    fontSize: 13,
+    color: colors.honey,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.white,
+    marginTop: spacing.md,
   },
   subtitle: {
     fontSize: 13,
     color: colors.textOnNavyMuted,
     marginTop: spacing.xs,
+    textAlign: 'center',
   },
   body: {
     flex: 1,
-    marginTop: -20,
     backgroundColor: colors.white,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
+    overflow: 'hidden',
+  },
+  bodyContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  mainGroup: {
+    paddingTop: spacing.xs,
+  },
+  submitButton: {
+    marginTop: spacing.lg,
+    marginBottom: 0,
   },
   card: {
     flexDirection: 'row',
@@ -161,7 +214,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     color: colors.textMuted,
-    marginTop: spacing.md,
+    paddingTop: spacing.md,
   },
   loginLinkAccent: {
     color: colors.honey,

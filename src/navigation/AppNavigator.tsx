@@ -11,6 +11,8 @@ import AccountTypeScreen from '../screens/AccountTypeScreen';
 import RegisterClientScreen from '../screens/RegisterClientScreen';
 import RegisterProfessionalScreen from '../screens/RegisterProfessionalScreen';
 import HomeScreen from '../screens/HomeScreen';
+import ServiceSelectionScreen from '../screens/ServiceSelectionScreen';
+import { CategoriaId } from '../data/mockProfessionals';
 
 // Define aquí todas las rutas y qué parámetros recibe cada una.
 // Esto le da autocompletado y chequeo de tipos a navigation.navigate(...).
@@ -20,6 +22,7 @@ export type RootStackParamList = {
   RegisterClient: undefined;
   RegisterProfessional: undefined;
   Home: undefined;
+  ServiceSelection: { categoriaId: CategoriaId; categoriaNombre: string };
   // Matching: { categoriaId: string };      // se agrega en el próximo paso
   // Profile: { profesionalId: string };
   // Tracking: { solicitudId: string };
@@ -40,6 +43,7 @@ export default function AppNavigator() {
         <Stack.Screen name="RegisterClient" component={RegisterClientScreen} />
         <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

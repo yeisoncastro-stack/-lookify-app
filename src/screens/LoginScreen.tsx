@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/colors';
+import { colors, radius, spacing } from '../theme/colors';
 import Button from '../components/Button';
 import TextField from '../components/TextField';
 
@@ -37,6 +37,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // TODO: reemplazar con la llamada real a tu API de autenticación
       // await api.post('/auth/login', { email, password });
       console.log('Login con', email);
+      navigation.navigate('Home');
     } catch (error) {
       console.error('Error al iniciar sesión', error);
     } finally {
@@ -53,73 +54,63 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {/* Header de marca */}
+      <View style={styles.screen}>
         <View style={styles.header}>
           <Image source={require('../../assets/logo-lookify.png')} style={styles.logo} />
           <Text style={styles.brand}>Lookify</Text>
           <Text style={styles.tagline}>Belleza a un toque de distancia</Text>
         </View>
 
-        {/* Tarjeta de formulario */}
         <View style={styles.card}>
-          <View style={styles.tabs}>
-            <TouchableOpacity
-              style={[styles.tab, tab === 'login' && styles.tabActive]}
-              onPress={() => handleTabChange('login')}
-            >
-              <Text style={[styles.tabText, tab === 'login' && styles.tabTextActive]}>
-                Ingresar
-              </Text>
+          <ScrollView
+            style={styles.cardScroll}
+            contentContainerStyle={styles.cardScrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tab, tab === 'login' && styles.tabActive]}
+                onPress={() => handleTabChange('login')}
+              >
+                <Text style={[styles.tabText, tab === 'login' && styles.tabTextActive]}>
+                  Ingresar
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, tab === 'register' && styles.tabActive]}
+                onPress={() => handleTabChange('register')}
+              >
+                <Text style={[styles.tabText, tab === 'register' && styles.tabTextActive]}>
+                  Crear cuenta
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextField
+              label="Correo electrónico"
+              placeholder="nombre@correo.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextField
+              label="Contraseña"
+              placeholder="••••••••"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+
+            <TouchableOpacity style={styles.forgotWrap}>
+              <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, tab === 'register' && styles.tabActive]}
-              onPress={() => handleTabChange('register')}
-            >
-              <Text style={[styles.tabText, tab === 'register' && styles.tabTextActive]}>
-                Crear cuenta
-              </Text>
-            </TouchableOpacity>
-          </View>
 
-          <TextField
-            label="Correo electrónico"
-            placeholder="nombre@correo.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextField
-            label="Contraseña"
-            placeholder="••••••••"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
-          <TouchableOpacity style={styles.forgotWrap}>
-            <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-
-          <Button label="Ingresar" onPress={handleLogin} loading={loading} />
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>o continúa con</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialText}>Apple</Text>
-            </TouchableOpacity>
-          </View>
+            <Button label="Ingresar" onPress={handleLogin} loading={loading} style={styles.submitButton} />
+          </ScrollView>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -129,39 +120,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.navy,
   },
-  scroll: {
-    flexGrow: 1,
+  screen: {
+    flex: 1,
   },
   header: {
+    flex: 2,
     alignItems: 'center',
-    paddingTop: spacing.xl,
-    paddingBottom: 48,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
   },
   logo: {
-    width: 80,
-    height: 80,
-    marginBottom: spacing.sm,
+    width: 96,
+    height: 96,
+    marginBottom: spacing.md,
     resizeMode: 'contain',
   },
   brand: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
     color: colors.honeyLight,
   },
   tagline: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.honey,
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    paddingHorizontal: spacing.md,
   },
   card: {
-    flex: 1,
+    flex: 3,
+    justifyContent: 'center',
     backgroundColor: colors.white,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
+    overflow: 'hidden',
+  },
+  cardScroll: {
+    flex: 1,
+  },
+  cardScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  submitButton: {
+    marginBottom: 0,
   },
   tabs: {
     flexDirection: 'row',
@@ -195,37 +201,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.honey,
     fontWeight: '600',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.md,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginHorizontal: spacing.sm,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  socialButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  socialText: {
-    fontSize: 13,
-    color: colors.navy,
-    fontWeight: '500',
   },
 });

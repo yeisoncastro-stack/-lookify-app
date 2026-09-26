@@ -55,3 +55,5 @@ export const CATEGORIAS = [
   { id: 'maquillaje', nombre: 'Maquillaje' },
   { id: 'unas', nombre: 'Uñas' },
 ] as const;
+
+export type CategoriaId = (typeof CATEGORIAS)[number]['id'];

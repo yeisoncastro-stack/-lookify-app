@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-// Pantalla 3: Inicio. Muestra el mapa con profesionales cercanos (datos de
+// Pantalla 4: Inicio. Muestra el mapa con profesionales cercanos (datos de
 // ejemplo por ahora), un selector de categorías, y el botón "Solicitar ahora".
 //
 // Usa PROVIDER_DEFAULT (no PROVIDER_GOOGLE) para no depender de una API key
@@ -17,7 +17,7 @@ type CategoriaId = (typeof CATEGORIAS)[number]['id'];
 
 interface HomeScreenProps {
   navigation: {
-    navigate: (screen: string) => void;
+    navigate: (screen: string, params?: object) => void;
   };
 }
 
@@ -38,7 +38,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   );
 
   const handleSolicitar = () => {
-    navigation.navigate('Matching');
+    const categoria = CATEGORIAS.find((c) => c.id === categoriaActiva);
+    navigation.navigate('ServiceSelection', {
+      categoriaId: categoriaActiva,
+      categoriaNombre: categoria?.nombre,
+    });
   };
 
   return (
