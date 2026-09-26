@@ -7,13 +7,22 @@
 // sistema. Cuando tengas la API key, el cambio es una sola línea (ver TODO).
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
-import { MOCK_PROFESSIONALS, CATEGORIAS } from '../data/mockProfessionals';
+import { MOCK_PROFESSIONALS, CATEGORIAS, CategoriaId } from '../data/mockProfessionals';
 
-type CategoriaId = (typeof CATEGORIAS)[number]['id'];
+// El ícono es presentación, por eso vive aquí y no en el archivo de datos
+// (que mañana se reemplaza por la respuesta del backend).
+const CATEGORIA_ICONOS: Record<CategoriaId, keyof typeof MaterialCommunityIcons.glyphMap> = {
+  peluqueria: 'content-cut',
+  barberia: 'razor-double-edge',
+  maquillaje: 'lipstick',
+  unas: 'hand-back-right-outline',
+};
 
 interface HomeScreenProps {
   navigation: {
@@ -64,6 +73,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         horizontal
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
+        style={styles.categoriesList}
         contentContainerStyle={styles.categoriesRow}
         renderItem={({ item }) => {
           const active = item.id === categoriaActiva;
@@ -72,6 +82,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               style={[styles.categoryChip, active && styles.categoryChipActive]}
               onPress={() => setCategoriaActiva(item.id)}
             >
+              <MaterialCommunityIcons
+                name={CATEGORIA_ICONOS[item.id]}
+                size={20}
+                color={active ? colors.white : colors.textSecondary}
+              />
               <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
                 {item.nombre}
               </Text>
@@ -105,7 +120,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       {/* Resumen + acción principal */}
       <View style={styles.footer}>
         <Text style={styles.footerCount}>
-          {profesionalesFiltrados.length} profesionales cerca de ti
+          {profesionalesFiltrados.length}{' '}
+          {profesionalesFiltrados.length === 1 ? 'profesional' : 'profesionales'} cerca de ti
         </Text>
         <Button label="Solicitar ahora" onPress={handleSolicitar} />
       </View>
@@ -147,17 +163,26 @@ const styles = StyleSheet.create({
   notifIcon: {
     fontSize: 16,
   },
+  // flexGrow: 0 evita que la lista horizontal (un ScrollView por dentro)
+  // se expanda verticalmente y estire los chips.
+  categoriesList: {
+    flexGrow: 0,
+  },
   categoriesRow: {
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,
   },
   categoryChip: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    minWidth: 88,
     paddingHorizontal: spacing.md,
-    paddingVertical: 10,
+    paddingVertical: spacing.sm,
     borderRadius: radius.lg,
     backgroundColor: colors.beige,
-    marginRight: spacing.sm,
   },
   categoryChipActive: {
     backgroundColor: colors.navy,

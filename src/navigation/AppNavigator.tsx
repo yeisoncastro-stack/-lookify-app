@@ -5,6 +5,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import LoginScreen from '../screens/LoginScreen';
 import AccountTypeScreen from '../screens/AccountTypeScreen';
@@ -33,18 +34,20 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Login"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AccountType" component={AccountTypeScreen} />
-        <Stack.Screen name="RegisterClient" component={RegisterClientScreen} />
-        <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="AccountType" component={AccountTypeScreen} />
+          <Stack.Screen name="RegisterClient" component={RegisterClientScreen} />
+          <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

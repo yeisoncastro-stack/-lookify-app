@@ -5,15 +5,8 @@
 // (ahí se elige Cliente o Profesional) en vez de mostrar el form aquí mismo.
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme/colors';
 import Button from '../components/Button';
 import TextField from '../components/TextField';

@@ -2,16 +2,11 @@
 // Formulario de registro para Cliente (frontend mock; sin backend todavía).
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker, {
+  DateTimePickerChangeEvent,
+} from '@react-native-community/datetimepicker';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
 import TextField from '../components/TextField';
@@ -55,13 +50,13 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
   const update = (key: keyof typeof form) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const onDateChange = (_event: DateTimePickerEvent, selected?: Date) => {
+  const onDateChange = (_event: DateTimePickerChangeEvent, selected: Date) => {
+    // En Android el diálogo se cierra solo tras elegir; en iOS lo mantenemos
+    // abierto hasta que el usuario toque "Listo".
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
-    if (selected) {
-      setFechaNacimiento(selected);
-    }
+    setFechaNacimiento(selected);
   };
 
   const handleSubmit = () => {
@@ -138,7 +133,8 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               maximumDate={new Date()}
-              onChange={onDateChange}
+              onValueChange={onDateChange}
+              onDismiss={() => setShowDatePicker(false)}
             />
           )}
           {Platform.OS === 'ios' && showDatePicker && (
