@@ -45,3 +45,8 @@ export function puntoAKm(
     );
   return { latitude: toDeg(lat2), longitude: toDeg(lon2) };
 }
+
+/** Una sola redondeo para UI, domicilio y navegación (1 decimal). */
+export function redondearDistanciaKm(km: number): number {
+  return Math.round(km * 10) / 10;
+}

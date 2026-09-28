@@ -14,6 +14,7 @@ import RegisterProfessionalScreen from '../screens/RegisterProfessionalScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ServiceSelectionScreen from '../screens/ServiceSelectionScreen';
 import MatchingScreen from '../screens/MatchingScreen';
+import ProfessionalOfferScreen from '../screens/ProfessionalOfferScreen';
 import { CategoriaId } from '../data/mockProfessionals';
 
 export type MatchingRouteParams = {
@@ -30,6 +31,16 @@ export type ProfessionalOfferRouteParams = MatchingRouteParams & {
   distanciaKm: number;
 };
 
+export type TrackingRouteParams = {
+  professionalId: string;
+  servicioId: string;
+  categoriaId: CategoriaId;
+  distanciaKm: number;
+  precioServicio: number;
+  precioDomicilio: number;
+  precioTotal: number;
+};
+
 export type RootStackParamList = {
   Login: undefined;
   AccountType: undefined;
@@ -39,6 +50,7 @@ export type RootStackParamList = {
   ServiceSelection: { categoriaId: CategoriaId; categoriaNombre: string };
   Matching: MatchingRouteParams;
   ProfessionalOffer: ProfessionalOfferRouteParams;
+  Tracking: TrackingRouteParams;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,6 +70,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
           <Stack.Screen name="Matching" component={MatchingScreen} />
+          <Stack.Screen name="ProfessionalOffer" component={ProfessionalOfferScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

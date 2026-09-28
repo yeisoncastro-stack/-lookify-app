@@ -63,11 +63,17 @@ Parámetros: `categoriaId`, `categoriaNombre`, `servicioId`, `radioKm` (3 | 6),
 `rejectionCount`, `rejectedIds`. Candidatos vía `filtrarCandidatosMatching`
 (misma categoría, `verificado`, `estado === 'DISPONIBLE'`, distancia ≤ radio,
 sin rechazados). Si `rejectionCount >= 3` o no hay candidatos → ampliar a 6 km /
-cancelar sin costo (sin checklist). Éxito → `replace('ProfessionalOffer', …)`
-(pantalla 7 aún no registrada; warning intencional). Cancelar → `reset` Home;
-`beforeRemove` + bandera `allowExitRef` solo para gesto/botón atrás. Timers se
-limpian con alerta de cancelación abierta. Ubicación cliente:
-`src/constants/geo.ts` (`MOCK_CLIENT_LOCATION`); distancias en `src/utils/geo.ts`.
+cancelar sin costo (sin checklist). Éxito → `replace('ProfessionalOffer', …)` con
+`distanciaKm` redondeada a 1 decimal (`redondearDistanciaKm`). Alerta compartida
+`promptCancelarSolicitud`; «Seguir buscando» reanuda el checklist donde iba.
+
+### 7. Oferta de profesional — `src/screens/ProfessionalOfferScreen.tsx`
+Fondo beige, tarjeta con acento honey: perfil, portafolio, reseña destacada y
+desglose vía `src/utils/pricing.ts` (`formatCOP`). `distanciaKm` de la ruta (1 decimal)
+para UI, domicilio y params; ETA con `VELOCIDAD_ESTIMADA_KM_H` en `constants/geo.ts`
+(mín. 1 min). «Aceptar» → `navigate('Tracking', …)` sin `allowExitRef` (pantalla 8
+pendiente). «Buscar otro» → `allowExitRef` + `replace('Matching', …)` con rechazo.
+Atrás/gesto: misma alerta que Matching. Datos inválidos → `reset` Home.
 
 ### Cambios transversales aplicados a todas las pantallas
 - `SafeAreaView` migrado de `react-native` (deprecado) a
@@ -83,11 +89,6 @@ limpian con alerta de cancelación abierta. Ubicación cliente:
 ---
 
 ## 2. Pantallas pendientes
-
-### 7. Oferta de profesional — `ProfessionalOfferScreen.tsx`
-Perfil de un profesional de ejemplo: avatar, nombre, calificación, reseñas,
-grid de portafolio y una reseña destacada. Dos acciones: "Aceptar profesional"
-lleva a la pantalla 8, "Buscar otro profesional" regresa a la 6.
 
 ### 8. Seguimiento en vivo — `TrackingScreen.tsx`
 Mapa con `react-native-maps` y `PROVIDER_DEFAULT` (igual que Inicio) con un
@@ -210,13 +211,11 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
 `HomeScreen.web.tsx` con un placeholder.
 
 ### Navegación
-- Pantalla 5 → `Matching` con params completos (`radioKm: 3`, `rejectionCount: 0`,
-  `rejectedIds: []`). Matching → `replace('ProfessionalOffer', …)` al terminar el
-  checklist; la ruta está tipada en `RootStackParamList` pero **sin** componente
-  (warning de NAVIGATE intencional hasta la pantalla 7).
-- **Pendiente de navegación:** tras terminar el checklist en Matching, el botón atrás no pide
-  confirmación porque `ProfessionalOffer` aún no existe (`allowExitRef` ya está en true y el
-  `replace` no monta pantalla 7); se resuelve en la Fase 3.
+- Pantalla 5 → `Matching` con params completos. Matching → `replace('ProfessionalOffer', …)`.
+  Oferta → `replace('Matching', …)` al rechazar o `navigate('Tracking', …)` al aceptar;
+  **`Tracking` tipado pero sin componente** (warning intencional hasta pantalla 8).
+- **Resuelto (Fase 3):** tras el checklist, `replace` monta ProfessionalOffer; el atrás en
+  Oferta vuelve a pedir confirmación salvo salidas con `allowExitRef`.
 - El stack usa `headerShown: false`; el retorno visual está en
   `src/components/BackHeader.tsx` (MaterialCommunityIcons `arrow-left`, área táctil
   44×44, `accessibilityLabel="Volver"`). Props: `title?`, `onBack?` (default

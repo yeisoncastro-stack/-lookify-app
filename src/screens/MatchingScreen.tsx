@@ -5,7 +5,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert,
   Animated,
   Easing,
   TouchableOpacity,
@@ -17,6 +16,8 @@ import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
 import { filtrarCandidatosMatching } from '../data/mockProfessionals';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { promptCancelarSolicitud } from '../utils/cancelarSolicitudAlert';
+import { redondearDistanciaKm } from '../utils/geo';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Matching'>;
 
@@ -38,8 +39,13 @@ export default function MatchingScreen({ navigation, route }: Props) {
 
   const allowExitRef = useRef(false);
   const alertOpenRef = useRef(false);
+  const completedStepsRef = useRef(0);
   const timerIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    completedStepsRef.current = completedSteps;
+  }, [completedSteps]);
 
   const clearTimers = useCallback(() => {
     timerIdsRef.current.forEach(clearTimeout);
@@ -76,85 +82,70 @@ export default function MatchingScreen({ navigation, route }: Props) {
     [clearTimers, navigation, params]
   );
 
-  const startSearchSimulation = useCallback(() => {
-    clearTimers();
-    setCompletedSteps(0);
-    setShowSpecialOptions(false);
+  const runSimulation = useCallback(
+    (fromStep: number) => {
+      clearTimers();
 
-    const candidates = filtrarCandidatosMatching(categoriaId, radioKm, rejectedIds);
+      if (fromStep === 0) {
+        setCompletedSteps(0);
+        setShowSpecialOptions(false);
+      }
 
-    if (rejectionCount >= 3 || candidates.length === 0) {
-      setShowSpecialOptions(true);
-      return;
-    }
+      const candidates = filtrarCandidatosMatching(categoriaId, radioKm, rejectedIds);
 
-    const candidate = candidates[0];
-    let delay = 0;
+      if (rejectionCount >= 3 || candidates.length === 0) {
+        setShowSpecialOptions(true);
+        return;
+      }
 
-    for (let step = 0; step < 3; step += 1) {
-      delay += MOCK_STEP_MS;
-      const stepIndex = step;
-      schedule(() => setCompletedSteps(stepIndex + 1), delay);
-    }
+      const candidate = candidates[0];
+      const distanciaKm = redondearDistanciaKm(candidate.distanciaKm);
 
-    schedule(() => {
-      goToOffer(candidate.professional.id, candidate.distanciaKm);
-    }, delay + MOCK_STEP_MS);
-  }, [
-    categoriaId,
-    radioKm,
-    rejectedIds,
-    rejectionCount,
-    clearTimers,
-    schedule,
-    goToOffer,
-  ]);
+      let delay = 0;
+      for (let step = fromStep; step < 3; step += 1) {
+        delay += MOCK_STEP_MS;
+        const stepIndex = step;
+        schedule(() => setCompletedSteps(stepIndex + 1), delay);
+      }
 
-  const startSearchSimulationRef = useRef(startSearchSimulation);
-  startSearchSimulationRef.current = startSearchSimulation;
+      schedule(() => {
+        goToOffer(candidate.professional.id, distanciaKm);
+      }, delay + MOCK_STEP_MS);
+    },
+    [
+      categoriaId,
+      radioKm,
+      rejectedIds,
+      rejectionCount,
+      clearTimers,
+      schedule,
+      goToOffer,
+    ]
+  );
+
+  const runSimulationRef = useRef(runSimulation);
+  runSimulationRef.current = runSimulation;
 
   const showCancelAlert = useCallback(
     (onConfirmExit: () => void) => {
-      clearTimers();
-      alertOpenRef.current = true;
-      Alert.alert(
-        'Cancelar solicitud',
-        '¿Seguro que quieres cancelar la búsqueda?',
-        [
-          {
-            text: 'No',
-            style: 'cancel',
-            onPress: () => {
-              alertOpenRef.current = false;
-              if (!showSpecialOptions) {
-                startSearchSimulationRef.current();
-              }
-            },
-          },
-          {
-            text: 'Sí, cancelar',
-            style: 'destructive',
-            onPress: () => {
-              alertOpenRef.current = false;
-              onConfirmExit();
-            },
-          },
-        ],
-        {
-          cancelable: true,
-          onDismiss: () => {
-            alertOpenRef.current = false;
-          },
-        }
-      );
+      promptCancelarSolicitud({
+        alertVisibleRef: alertOpenRef,
+        onBeforeShow: clearTimers,
+        onSeguirBuscando: () => {
+          if (!showSpecialOptions) {
+            runSimulationRef.current(completedStepsRef.current);
+          }
+        },
+        onConfirmCancel: onConfirmExit,
+      });
     },
     [clearTimers, showSpecialOptions]
   );
 
   useEffect(() => {
-    startSearchSimulation();
+    runSimulation(0);
     return () => clearTimers();
-  }, [startSearchSimulation, clearTimers]);
+  }, [runSimulation, clearTimers]);
 
   useEffect(() => {
     const loop = Animated.loop(
