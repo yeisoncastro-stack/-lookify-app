@@ -299,7 +299,9 @@ La pantalla 7 muestra el desglose **antes** de aceptar:
 
 - **precioServicio** = precio base del servicio × ajuste del profesional (±20 %, entre
   0,8 y 1,2).
-- **precioDomicilio** = 5.000 + 1.200 × km, con tope de 15.000.
+- **precioDomicilio** = 4.000 + 1.200 × km, con tope de 7.000.
+- **Cambio:** domicilio ajustado a base $4.000 + $1.200/km, tope $7.000 (equivalente a un
+  pasaje de ida y vuelta del profesional); antes era base $5.000, tope $15.000.
 - La comisión de Lookify (15 % sobre el servicio) **no** se muestra al cliente.
 - Esos mismos valores viajan por parámetros hasta la pantalla 10; no se recalculan de
   otra forma.
