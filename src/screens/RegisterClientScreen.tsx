@@ -1,7 +1,7 @@
 // src/screens/RegisterClientScreen.tsx
 // Formulario de registro para Cliente (frontend mock; sin backend todavía).
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker, {
@@ -11,13 +11,33 @@ import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
 import TextField from '../components/TextField';
 import BackHeader from '../components/BackHeader';
+import { isEmailRegistered, registerMockUser } from '../data/mockUsers';
+import {
+  registroClienteValido,
+  validarConfirmarContrasena,
+  validarContrasenaRegistro,
+  validarCorreo,
+  validarDocumento,
+  validarFechaNacimiento,
+  validarNacionalidad,
+  validarNombre,
+  validarTelefono,
+  TipoDocumentoId,
+} from '../utils/validators';
 
 const TIPOS_DOCUMENTO = [
-  { id: 'CC', label: 'C.C.' },
-  { id: 'Pasaporte', label: 'Pasaporte' },
+  { id: 'CC' as const, label: 'C.C.' },
+  { id: 'Pasaporte' as const, label: 'Pasaporte' },
 ] as const;
 
-type TipoDocumentoId = (typeof TIPOS_DOCUMENTO)[number]['id'];
+type FieldKey =
+  | 'nombre'
+  | 'numeroDocumento'
+  | 'nacionalidad'
+  | 'telefono'
+  | 'email'
+  | 'password'
+  | 'confirmPassword';
 
 interface RegisterClientScreenProps {
   navigation: {
@@ -35,6 +55,11 @@ function formatFecha(date: Date | null): string {
   });
 }
 
+function correoYaRegistradoError(email: string): string | null {
+  if (validarCorreo(email) !== null) return null;
+  return isEmailRegistered(email) ? 'Este correo ya está registrado' : null;
+}
+
 export default function RegisterClientScreen({ navigation }: RegisterClientScreenProps) {
   const [form, setForm] = useState({
     nombre: '',
@@ -43,36 +68,90 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
     telefono: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [tipoDocumento, setTipoDocumento] = useState<TipoDocumentoId>('CC');
   const [fechaNacimiento, setFechaNacimiento] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [fechaTouched, setFechaTouched] = useState(false);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
+    nombre: false,
+    numeroDocumento: false,
+    nacionalidad: false,
+    telefono: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+  });
+
+  const markTouched = (key: FieldKey) => setTouched((prev) => ({ ...prev, [key]: true }));
 
   const update = (key: keyof typeof form) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const onDateChange = (_event: DateTimePickerChangeEvent, selected: Date) => {
-    // En Android el diálogo se cierra solo tras elegir; en iOS lo mantenemos
-    // abierto hasta que el usuario toque "Listo".
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
     setFechaNacimiento(selected);
+    setFechaTouched(true);
   };
 
-  const handleSubmit = () => {
-    if (!aceptaTerminos) return;
-    // TODO: POST /auth/register/client cuando exista backend
-    console.log('Registrar cliente', {
+  const closeDatePicker = () => {
+    setShowDatePicker(false);
+    setFechaTouched(true);
+  };
+
+  const errors = useMemo(() => {
+    const emailFormat = validarCorreo(form.email);
+    const emailDuplicate =
+      emailFormat === null && isEmailRegistered(form.email)
+        ? 'Este correo ya está registrado'
+        : null;
+
+    return {
+      nombre: validarNombre(form.nombre),
+      numeroDocumento: validarDocumento(tipoDocumento, form.numeroDocumento),
+      nacionalidad: validarNacionalidad(form.nacionalidad),
+      fecha: validarFechaNacimiento(fechaNacimiento),
+      telefono: validarTelefono(form.telefono),
+      email: emailFormat ?? emailDuplicate,
+      password: validarContrasenaRegistro(form.password),
+      confirmPassword: validarConfirmarContrasena(form.password, form.confirmPassword),
+    };
+  }, [form, tipoDocumento, fechaNacimiento]);
+
+  const showError = (key: FieldKey, message: string | null) =>
+    touched[key] && message ? message : undefined;
+
+  const fechaError = fechaTouched && errors.fecha ? errors.fecha : undefined;
+
+  const formValid =
+    registroClienteValido({
       ...form,
       tipoDocumento,
       fechaNacimiento,
+    }) && correoYaRegistradoError(form.email) === null;
+
+  const handleSubmit = () => {
+    if (!aceptaTerminos || !formValid) return;
+    registerMockUser({
+      email: form.email,
+      password: form.password,
+      nombre: form.nombre.trim(),
     });
     navigation.reset({
       index: 0,
       routes: [{ name: 'Home' }],
     });
+  };
+
+  const handleTipoDocumento = (tipo: TipoDocumentoId) => {
+    setTipoDocumento(tipo);
+    if (touched.numeroDocumento) {
+      markTouched('numeroDocumento');
+    }
   };
 
   return (
@@ -95,6 +174,8 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
             placeholder="Tu nombre"
             value={form.nombre}
             onChangeText={update('nombre')}
+            onBlur={() => markTouched('nombre')}
+            error={showError('nombre', errors.nombre)}
           />
 
           <Text style={styles.fieldLabel}>Documento de identidad</Text>
@@ -105,7 +186,7 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
                 <TouchableOpacity
                   key={tipo.id}
                   style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setTipoDocumento(tipo.id)}
+                  onPress={() => handleTipoDocumento(tipo.id)}
                 >
                   <Text style={[styles.chipText, active && styles.chipTextActive]}>{tipo.label}</Text>
                 </TouchableOpacity>
@@ -115,9 +196,12 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
           <TextField
             label="Número de documento"
             placeholder="1234567890"
-            keyboardType="number-pad"
+            keyboardType={tipoDocumento === 'CC' ? 'number-pad' : 'default'}
+            autoCapitalize={tipoDocumento === 'Pasaporte' ? 'characters' : 'none'}
             value={form.numeroDocumento}
             onChangeText={update('numeroDocumento')}
+            onBlur={() => markTouched('numeroDocumento')}
+            error={showError('numeroDocumento', errors.numeroDocumento)}
           />
 
           <TextField
@@ -125,14 +209,20 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
             placeholder="Ej. Colombiana"
             value={form.nacionalidad}
             onChangeText={update('nacionalidad')}
+            onBlur={() => markTouched('nacionalidad')}
+            error={showError('nacionalidad', errors.nacionalidad)}
           />
 
           <Text style={styles.fieldLabel}>Fecha de nacimiento</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+          <TouchableOpacity
+            style={[styles.dateButton, fechaError ? styles.dateButtonError : null]}
+            onPress={() => setShowDatePicker(true)}
+          >
             <Text style={[styles.dateButtonText, !fechaNacimiento && styles.datePlaceholder]}>
               {formatFecha(fechaNacimiento)}
             </Text>
           </TouchableOpacity>
+          {fechaError ? <Text style={styles.fieldError}>{fechaError}</Text> : null}
           {showDatePicker && (
             <DateTimePicker
               value={fechaNacimiento ?? new Date(2000, 0, 1)}
@@ -140,21 +230,23 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               maximumDate={new Date()}
               onValueChange={onDateChange}
-              onDismiss={() => setShowDatePicker(false)}
+              onDismiss={closeDatePicker}
             />
           )}
           {Platform.OS === 'ios' && showDatePicker && (
-            <TouchableOpacity style={styles.dateDone} onPress={() => setShowDatePicker(false)}>
+            <TouchableOpacity style={styles.dateDone} onPress={closeDatePicker}>
               <Text style={styles.dateDoneText}>Listo</Text>
             </TouchableOpacity>
           )}
 
           <TextField
             label="Teléfono"
-            placeholder="300 000 0000"
+            placeholder="3000000000"
             keyboardType="phone-pad"
             value={form.telefono}
             onChangeText={update('telefono')}
+            onBlur={() => markTouched('telefono')}
+            error={showError('telefono', errors.telefono)}
           />
           <TextField
             label="Correo electrónico"
@@ -163,6 +255,8 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
             autoCapitalize="none"
             value={form.email}
             onChangeText={update('email')}
+            onBlur={() => markTouched('email')}
+            error={showError('email', errors.email)}
           />
           <TextField
             label="Contraseña"
@@ -170,6 +264,17 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
             secureTextEntry
             value={form.password}
             onChangeText={update('password')}
+            onBlur={() => markTouched('password')}
+            error={showError('password', errors.password)}
+          />
+          <TextField
+            label="Confirmar contraseña"
+            placeholder="••••••••"
+            secureTextEntry
+            value={form.confirmPassword}
+            onChangeText={update('confirmPassword')}
+            onBlur={() => markTouched('confirmPassword')}
+            error={showError('confirmPassword', errors.confirmPassword)}
           />
 
           <TouchableOpacity
@@ -191,7 +296,7 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
           <Button
             label="Crear cuenta"
             onPress={handleSubmit}
-            disabled={!aceptaTerminos}
+            disabled={!aceptaTerminos || !formValid}
             style={styles.submitButton}
           />
         </View>
@@ -235,11 +340,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.xl,
   },
   fieldLabel: {
     ...typography.caption,
     marginBottom: spacing.sm,
+  },
+  fieldError: {
+    fontSize: 12,
+    color: colors.error,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
   },
   chipsRow: {
     flexDirection: 'row',
@@ -274,6 +385,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginBottom: spacing.md,
     backgroundColor: colors.white,
+  },
+  dateButtonError: {
+    borderColor: colors.error,
+    marginBottom: spacing.xs,
   },
   dateButtonText: {
     fontSize: 14,

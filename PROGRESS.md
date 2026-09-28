@@ -17,6 +17,14 @@ contenido quedó centrado verticalmente dentro de la tarjeta blanca
 (`justifyContent: 'center'`) en vez de apilado arriba. La zona navy se amplió a
 `flex: 2` contra `flex: 3` de la tarjeta, con el logo a 96 px.
 
+Validación UX en `src/utils/validators.ts`: correo con formato válido (trim en
+correo); contraseña obligatoria sin trim (`length > 0`). Errores por campo tras
+`onBlur` vía `TextField` (`error`). «Ingresar» deshabilitado hasta que ambos
+campos sean válidos. Login simulado contra `src/data/mockUsers.ts` (comparación
+de correo sin distinguir mayúsculas; contraseña sí distingue). Cuenta de prueba:
+`cliente@lookify.test` / `Lookify123`. Si falla: «Correo o contraseña incorrectos»;
+si acierta: `navigation.reset` a Home.
+
 ### 2. Selección de tipo de cuenta — `src/screens/AccountTypeScreen.tsx`
 Se le agregó el header con logo, marca y slogan igual que en Login. El header
 quedó de altura natural (sin `flex`) porque fijarlo en `flex: 2` recortaba la
@@ -25,11 +33,15 @@ un `ScrollView` con `flexGrow: 1` y `justifyContent: 'space-between'`: tarjetas
 y Continuar agrupados arriba, el link "¿Ya tienes cuenta?" anclado abajo.
 
 ### 3. Registro de cliente — `src/screens/RegisterClientScreen.tsx`
-Se amplió de 4 a 8 campos: nombre, tipo de documento (C.C. / Pasaporte) con su
-número, nacionalidad, fecha de nacimiento, teléfono, correo, contraseña y el
-checkbox obligatorio de términos. El botón "Crear cuenta" está deshabilitado
-mientras el checkbox no esté marcado. Usa `@react-native-community/datetimepicker`
-con la API vigente (`onValueChange` + `onDismiss`, no el `onChange` deprecado).
+Formulario con nombre, documento (C.C. / Pasaporte), nacionalidad, fecha de
+nacimiento, teléfono, correo, contraseña, **confirmar contraseña** y términos.
+Reglas en `validators.ts` (trim en nombre, documento, nacionalidad, teléfono y
+correo; **sin trim** en contraseñas). Edad mínima 18 años (fecha completa).
+Correo duplicado (incluida la demo): «Este correo ya está registrado». «Crear
+cuenta» deshabilitado hasta formulario válido + términos. Errores tras `onBlur`
+(fecha al elegir/cerrar el selector). Registro exitoso: `registerMockUser` en
+memoria (correo en minúsculas + nombre) y `reset` a Home. Usa
+`@react-native-community/datetimepicker` con `onValueChange` + `onDismiss`.
 
 ### 4. Inicio — `src/screens/HomeScreen.tsx`
 Se corrigió el estirado vertical de los chips de categoría, causado por dos
@@ -48,6 +60,10 @@ por radio; "Continuar" deshabilitado hasta elegir uno.
 - `SafeAreaView` migrado de `react-native` (deprecado) a
   `react-native-safe-area-context`.
 - `SafeAreaProvider` envolviendo el `NavigationContainer` en `AppNavigator.tsx`.
+- **Validaciones del frontend:** solo UX; el backend debe volver a validar TODO.
+  El login actual es simulado (`mockUsers.ts`). `src/utils/validators.ts` se
+  reutilizará en el registro del profesional. `TextField` admite `error?: string`
+  (borde y texto con `colors.error`).
 
 ---
 

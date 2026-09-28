@@ -10,8 +10,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme/colors';
 import Button from '../components/Button';
 import TextField from '../components/TextField';
+import { findMockUser } from '../data/mockUsers';
+import { loginValido, validarContrasenaLogin, validarCorreo } from '../utils/validators';
 
-// Cuando conectes react-navigation, reemplaza esto por el tipo real de tu stack.
 interface LoginScreenProps {
   navigation: {
     navigate: (screen: string) => void;
@@ -24,13 +25,23 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const emailError = touched.email ? validarCorreo(email) : null;
+  const passwordError = touched.password ? validarContrasenaLogin(password) : null;
+  const canSubmit = loginValido(email, password);
 
   const handleLogin = async () => {
+    if (!canSubmit) return;
     setLoading(true);
+    setLoginError(null);
     try {
-      // TODO: reemplazar con la llamada real a tu API de autenticación
-      // await api.post('/auth/login', { email, password });
-      console.log('Login con', email);
+      const user = findMockUser(email, password);
+      if (!user) {
+        setLoginError('Correo o contraseña incorrectos');
+        return;
+      }
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],
@@ -90,21 +101,39 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                setLoginError(null);
+              }}
+              onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+              error={emailError ?? undefined}
             />
             <TextField
               label="Contraseña"
               placeholder="••••••••"
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                setLoginError(null);
+              }}
+              onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+              error={passwordError ?? undefined}
             />
 
             <TouchableOpacity style={styles.forgotWrap}>
               <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
 
-            <Button label="Ingresar" onPress={handleLogin} loading={loading} style={styles.submitButton} />
+            {loginError ? <Text style={styles.loginError}>{loginError}</Text> : null}
+
+            <Button
+              label="Ingresar"
+              onPress={handleLogin}
+              loading={loading}
+              disabled={!canSubmit}
+              style={styles.submitButton}
+            />
           </ScrollView>
         </View>
       </View>
@@ -198,5 +227,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.honey,
     fontWeight: '600',
+  },
+  loginError: {
+    fontSize: 13,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });
