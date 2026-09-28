@@ -214,6 +214,9 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
   `rejectedIds: []`). Matching → `replace('ProfessionalOffer', …)` al terminar el
   checklist; la ruta está tipada en `RootStackParamList` pero **sin** componente
   (warning de NAVIGATE intencional hasta la pantalla 7).
+- **Pendiente de navegación:** tras terminar el checklist en Matching, el botón atrás no pide
+  confirmación porque `ProfessionalOffer` aún no existe (`allowExitRef` ya está en true y el
+  `replace` no monta pantalla 7); se resuelve en la Fase 3.
 - El stack usa `headerShown: false`; el retorno visual está en
   `src/components/BackHeader.tsx` (MaterialCommunityIcons `arrow-left`, área táctil
   44×44, `accessibilityLabel="Volver"`). Props: `title?`, `onBack?` (default
