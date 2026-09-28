@@ -188,9 +188,23 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
 - La pantalla 5 navega a `Matching`, que aún no existe: en consola aparece
   `The action 'NAVIGATE' with payload {"name":"Matching"} was not handled`.
   Es intencional, sirve de recordatorio hasta construir la pantalla 6.
-- Ninguna pantalla tiene botón de volver atrás: el stack usa
-  `headerShown: false`, así que solo se puede retroceder con el gesto del
-  sistema o el botón físico de Android.
+- El stack usa `headerShown: false`; el retorno visual está en
+  `src/components/BackHeader.tsx` (MaterialCommunityIcons `arrow-left`, área táctil
+  44×44, `accessibilityLabel="Volver"`). Props: `title?`, `onBack?` (default
+  `navigation.goBack()`), `variant?: 'light' | 'dark'`, `rightSlot?`. Sin flecha si
+  no hay `onBack` y `navigation.canGoBack()` es false.
+
+| Pantalla | BackHeader |
+|----------|------------|
+| 1 Login | No (raíz) |
+| 2 AccountType | Sí, `variant="dark"` |
+| 3 RegisterClient | Sí, `variant="dark"` |
+| 4 Home | No (raíz post-login) |
+| 5 ServiceSelection | Sí, `title` = nombre de categoría, `variant="dark"` |
+| 6–10 | No (cancelar o acciones propias) |
+
+En pantallas 2, 3 y 5 el gesto o botón físico de Android también retrocede; el stack
+nativo no muestra header de React Navigation.
 
 ### Registro de profesional
 `RegisterProfessionalScreen.tsx` existe y es alcanzable desde la pantalla 2,

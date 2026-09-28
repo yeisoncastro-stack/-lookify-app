@@ -8,6 +8,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
+import BackHeader from '../components/BackHeader';
 
 type AccountType = 'client' | 'professional';
 
@@ -32,6 +33,7 @@ export default function AccountTypeScreen({ navigation }: AccountTypeScreenProps
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
         <View style={styles.header}>
+          <BackHeader variant="dark" />
           <Image source={require('../../assets/logo-lookify.png')} style={styles.logo} />
           <Text style={styles.brand}>Lookify</Text>
           <Text style={styles.tagline}>Belleza a un toque de distancia</Text>

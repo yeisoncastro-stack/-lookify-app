@@ -10,6 +10,7 @@ import DateTimePicker, {
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
 import TextField from '../components/TextField';
+import BackHeader from '../components/BackHeader';
 
 const TIPOS_DOCUMENTO = [
   { id: 'CC', label: 'C.C.' },
@@ -73,6 +74,7 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <BackHeader variant="dark" />
         <Text style={styles.title}>Crear cuenta de cliente</Text>
         <Text style={styles.subtitle}>Completa tus datos para continuar</Text>
       </View>

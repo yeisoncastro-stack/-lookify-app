@@ -8,6 +8,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
+import BackHeader from '../components/BackHeader';
 import { CategoriaId } from '../data/mockProfessionals';
 import { SERVICIOS_POR_CATEGORIA, MockService, formatPrecio } from '../data/mockServices';
 
@@ -40,7 +41,7 @@ export default function ServiceSelectionScreen({
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{categoriaNombre}</Text>
+        <BackHeader title={categoriaNombre} variant="dark" />
         <Text style={styles.subtitle}>Elige el servicio que necesitas</Text>
       </View>
 
