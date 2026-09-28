@@ -63,7 +63,9 @@ por radio; "Continuar" deshabilitado hasta elegir uno.
 - **Validaciones del frontend:** solo UX; el backend debe volver a validar TODO.
   El login actual es simulado (`mockUsers.ts`). `src/utils/validators.ts` se
   reutilizará en el registro del profesional. `TextField` admite `error?: string`
-  (borde y texto con `colors.error`).
+  (borde y texto con `colors.error`). Si recibe `secureTextEntry`, muestra un botón
+  de ojo (`eye-outline` / `eye-off-outline`) con estado `visible` propio por campo;
+  `autoCapitalize="none"` y `autoCorrect={false}` por defecto en esos inputs.
 
 ---
 
