@@ -206,6 +206,12 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
 En pantallas 2, 3 y 5 el gesto o botón físico de Android también retrocede; el stack
 nativo no muestra header de React Navigation.
 
+Tras **ingresar** (Login) o **crear cuenta de cliente** (RegisterClient), la app usa
+`navigation.reset` hacia Home: Login y el registro no quedan en el stack (el gesto atrás
+desde Inicio no vuelve al formulario). Todavía no hay botón de cerrar sesión; para volver
+a Login durante las pruebas hay que **recargar la app** (p. ej. menú de desarrollador de
+Expo Go → Reload, o cerrar y reabrir la app).
+
 ### Registro de profesional
 `RegisterProfessionalScreen.tsx` existe y es alcanzable desde la pantalla 2,
 pero **no forma parte de las 10 pantallas del flujo cliente** y no se ha

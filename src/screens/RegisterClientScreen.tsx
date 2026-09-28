@@ -22,6 +22,7 @@ type TipoDocumentoId = (typeof TIPOS_DOCUMENTO)[number]['id'];
 interface RegisterClientScreenProps {
   navigation: {
     navigate: (screen: string) => void;
+    reset: (state: { index: number; routes: { name: 'Home' }[] }) => void;
   };
 }
 
@@ -68,7 +69,10 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
       tipoDocumento,
       fechaNacimiento,
     });
-    navigation.navigate('Home');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' }],
+    });
   };
 
   return (

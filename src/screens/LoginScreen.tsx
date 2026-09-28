@@ -15,6 +15,7 @@ import TextField from '../components/TextField';
 interface LoginScreenProps {
   navigation: {
     navigate: (screen: string) => void;
+    reset: (state: { index: number; routes: { name: 'Home' }[] }) => void;
   };
 }
 
@@ -30,7 +31,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // TODO: reemplazar con la llamada real a tu API de autenticación
       // await api.post('/auth/login', { email, password });
       console.log('Login con', email);
-      navigation.navigate('Home');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
     } catch (error) {
       console.error('Error al iniciar sesión', error);
     } finally {
