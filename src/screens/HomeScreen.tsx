@@ -14,6 +14,7 @@ import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import Button from '../components/Button';
 import { MOCK_PROFESSIONALS, CATEGORIAS, CategoriaId } from '../data/mockProfessionals';
+import { MOCK_CLIENT_LOCATION } from '../constants/geo';
 
 // El ícono es presentación, por eso vive aquí y no en el archivo de datos
 // (que mañana se reemplaza por la respuesta del backend).
@@ -30,11 +31,9 @@ interface HomeScreenProps {
   };
 }
 
-// Ubicación inicial del mapa (Chapinero, Bogotá) — cuando conectemos
-// geolocalización real, esto se reemplaza por la ubicación del usuario.
 const INITIAL_REGION = {
-  latitude: 4.6533,
-  longitude: -74.0627,
+  latitude: MOCK_CLIENT_LOCATION.latitude,
+  longitude: MOCK_CLIENT_LOCATION.longitude,
   latitudeDelta: 0.02,
   longitudeDelta: 0.02,
 };

@@ -13,10 +13,23 @@ import RegisterClientScreen from '../screens/RegisterClientScreen';
 import RegisterProfessionalScreen from '../screens/RegisterProfessionalScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ServiceSelectionScreen from '../screens/ServiceSelectionScreen';
+import MatchingScreen from '../screens/MatchingScreen';
 import { CategoriaId } from '../data/mockProfessionals';
 
-// Define aquí todas las rutas y qué parámetros recibe cada una.
-// Esto le da autocompletado y chequeo de tipos a navigation.navigate(...).
+export type MatchingRouteParams = {
+  categoriaId: CategoriaId;
+  categoriaNombre: string;
+  servicioId: string;
+  radioKm: 3 | 6;
+  rejectionCount: number;
+  rejectedIds: string[];
+};
+
+export type ProfessionalOfferRouteParams = MatchingRouteParams & {
+  professionalId: string;
+  distanciaKm: number;
+};
+
 export type RootStackParamList = {
   Login: undefined;
   AccountType: undefined;
@@ -24,10 +37,8 @@ export type RootStackParamList = {
   RegisterProfessional: undefined;
   Home: undefined;
   ServiceSelection: { categoriaId: CategoriaId; categoriaNombre: string };
-  // Matching: { categoriaId: string };      // se agrega en el próximo paso
-  // Profile: { profesionalId: string };
-  // Tracking: { solicitudId: string };
-  // Payment: { solicitudId: string };
+  Matching: MatchingRouteParams;
+  ProfessionalOffer: ProfessionalOfferRouteParams;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,6 +57,7 @@ export default function AppNavigator() {
           <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
+          <Stack.Screen name="Matching" component={MatchingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

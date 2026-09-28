@@ -56,6 +56,19 @@ navegación desde Inicio, muestra el nombre de la categoría en el header y list
 los servicios de esa categoría con nombre, duración y precio. Selección única
 por radio; "Continuar" deshabilitado hasta elegir uno.
 
+### 6. Buscando profesional — `src/screens/MatchingScreen.tsx`
+Fondo navy, ícono de búsqueda (pulso), checklist de 3 pasos simulados
+(`MOCK_STEP_MS` ≈ 1,5 s; la UI menciona la ventana de 30 s del profesional).
+Parámetros: `categoriaId`, `categoriaNombre`, `servicioId`, `radioKm` (3 | 6),
+`rejectionCount`, `rejectedIds`. Candidatos vía `filtrarCandidatosMatching`
+(misma categoría, `verificado`, `estado === 'DISPONIBLE'`, distancia ≤ radio,
+sin rechazados). Si `rejectionCount >= 3` o no hay candidatos → ampliar a 6 km /
+cancelar sin costo (sin checklist). Éxito → `replace('ProfessionalOffer', …)`
+(pantalla 7 aún no registrada; warning intencional). Cancelar → `reset` Home;
+`beforeRemove` + bandera `allowExitRef` solo para gesto/botón atrás. Timers se
+limpian con alerta de cancelación abierta. Ubicación cliente:
+`src/constants/geo.ts` (`MOCK_CLIENT_LOCATION`); distancias en `src/utils/geo.ts`.
+
 ### Cambios transversales aplicados a todas las pantallas
 - `SafeAreaView` migrado de `react-native` (deprecado) a
   `react-native-safe-area-context`.
@@ -70,12 +83,6 @@ por radio; "Continuar" deshabilitado hasta elegir uno.
 ---
 
 ## 2. Pantallas pendientes
-
-### 6. Buscando profesional — `MatchingScreen.tsx`
-Pantalla de espera con fondo navy, ícono de búsqueda y checklist de 3 pasos
-(Solicitud enviada / Buscando candidatos / Preparando oferta), más un botón
-"Cancelar solicitud". Tras unos segundos simulados con `setTimeout` (no hay
-backend), navega sola a la pantalla 7.
 
 ### 7. Oferta de profesional — `ProfessionalOfferScreen.tsx`
 Perfil de un profesional de ejemplo: avatar, nombre, calificación, reseñas,
@@ -105,9 +112,9 @@ total.
 ## 3. Decisiones de arquitectura
 
 ### Separación de los archivos de datos mock
-`mockProfessionals.ts` modela **profesionales** (nombre, categoría,
-calificación, coordenadas) y `mockServices.ts` modela el **catálogo de
-servicios**. Se separaron porque son entidades distintas que vendrán de
+`mockProfessionals.ts` modela **profesionales** (incluye `EstadoProfesional`,
+`verificado`, `ajustePrecio`, reseña/portafolio, coords con ids `{cat}-{km}km-…`)
+y `mockServices.ts` modela el **catálogo de servicios**. Se separaron porque son entidades distintas que vendrán de
 endpoints distintos cuando exista el backend; mezclarlas obligaría a partir el
 archivo más adelante.
 
@@ -203,9 +210,10 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
 `HomeScreen.web.tsx` con un placeholder.
 
 ### Navegación
-- La pantalla 5 navega a `Matching`, que aún no existe: en consola aparece
-  `The action 'NAVIGATE' with payload {"name":"Matching"} was not handled`.
-  Es intencional, sirve de recordatorio hasta construir la pantalla 6.
+- Pantalla 5 → `Matching` con params completos (`radioKm: 3`, `rejectionCount: 0`,
+  `rejectedIds: []`). Matching → `replace('ProfessionalOffer', …)` al terminar el
+  checklist; la ruta está tipada en `RootStackParamList` pero **sin** componente
+  (warning de NAVIGATE intencional hasta la pantalla 7).
 - El stack usa `headerShown: false`; el retorno visual está en
   `src/components/BackHeader.tsx` (MaterialCommunityIcons `arrow-left`, área táctil
   44×44, `accessibilityLabel="Volver"`). Props: `title?`, `onBack?` (default

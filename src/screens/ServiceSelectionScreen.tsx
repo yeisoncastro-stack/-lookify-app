@@ -34,8 +34,14 @@ export default function ServiceSelectionScreen({
 
   const handleContinuar = () => {
     if (!servicioSeleccionado) return;
-    // TODO: la pantalla Matching todavía no existe; se agrega en el próximo paso.
-    navigation.navigate('Matching', { categoriaId, servicioId: servicioSeleccionado });
+    navigation.navigate('Matching', {
+      categoriaId,
+      categoriaNombre,
+      servicioId: servicioSeleccionado,
+      radioKm: 3,
+      rejectionCount: 0,
+      rejectedIds: [],
+    });
   };
 
   return (
