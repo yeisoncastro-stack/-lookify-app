@@ -198,3 +198,90 @@ pero **no forma parte de las 10 pantallas del flujo cliente** y no se ha
 revisado contra ninguna spec. Sigue con el layout viejo (formulario y botón
 dentro de un único `ScrollView`), así que arrastra el problema de espacio vacío
 abajo que ya se corrigió en las demás.
+
+---
+
+## 5. Reglas de negocio del flujo de solicitud
+
+### Orden de aceptación
+
+El profesional acepta **primero** (App Profesional, pantalla «Solicitud entrante»,
+ventana de 30 s). Solo cuando acepta, se le ofrece al cliente (pantalla 7), que
+revisa calificación, reseñas, portafolio y precio, y confirma o rechaza. El cliente
+**nunca** ve un profesional que no haya aceptado.
+
+### Máquina de estados
+
+```
+SOLICITADO
+  → BUSCANDO_PROFESIONAL (se envía la solicitud al candidato disponible más cercano)
+     → [profesional no responde en 30 s] → siguiente candidato; sigue en BUSCANDO_PROFESIONAL
+     → [profesional acepta] → OFERTADO (cliente ve perfil, reseñas, portafolio y precio)
+        → ACEPTADO (por el cliente) → EN_CAMINO → INICIADO → FINALIZADO
+        → RECHAZADO_POR_CLIENTE → vuelve a BUSCANDO_PROFESIONAL (si no se llegó al límite)
+  → CANCELADO (en cualquier punto antes de INICIADO)
+```
+
+### Regla de los 30 s
+
+Si el profesional no responde, se pasa al siguiente candidato y el profesional sigue
+en estado **Disponible**. No se le penaliza ni se le marca **Ocupado**.
+
+### Radio de búsqueda
+
+Radio inicial: **3 km**. Se puede ampliar **una sola vez** hasta **6 km**, que es el
+tope absoluto.
+
+### Límite de rechazos
+
+Máximo **3 rechazos del cliente por radio**. Al llegar a 3:
+
+- Si el radio es **3 km** → opciones «Ampliar radio a 6 km» (el contador se reinicia a
+  0) o «Cancelar sin costo».
+- Si ya está en **6 km** → solo «Cancelar sin costo».
+
+En el frontend (sin backend) se simula pasando `rejectionCount`, `radioKm` y
+`rejectedIds` por parámetros de navegación entre las pantallas 6 y 7.
+
+### Precio en la oferta
+
+La pantalla 7 muestra el desglose **antes** de aceptar:
+
+`precioServicio + precioDomicilio = precioTotal` (nunca un solo campo de total).
+
+- **precioServicio** = precio base del servicio × ajuste del profesional (±20 %, entre
+  0,8 y 1,2).
+- **precioDomicilio** = 5.000 + 1.200 × km, con tope de 15.000.
+- La comisión de Lookify (15 % sobre el servicio) **no** se muestra al cliente.
+- Esos mismos valores viajan por parámetros hasta la pantalla 10; no se recalculan de
+  otra forma.
+
+### Otras decisiones
+
+- El panel Admin **no existe en código**: solo mockups, que son la fuente de verdad de
+  diseño (categorías, precios de Barbería, verificación todo-o-nada) hasta que se
+  construya.
+- Las **10 pantallas oficiales** de App Profesional: Login, Tipo de cuenta, Registro
+  datos personales, Selección de servicios, Carga de certificados, Estado de
+  verificación, Panel principal (incluye el toggle Disponible/Ocupado), Solicitud
+  entrante, Servicio en curso, Historial/ingresos (incluye la gestión de portafolio).
+- Las duraciones y precios de `mockServices.ts` son **oficiales**. Catálogo vigente:
+
+| Categoría | Servicio | Precio (COP) | Duración (min) |
+|-----------|----------|--------------|----------------|
+| Peluquería | Corte de dama | 35.000 | 45 |
+| Peluquería | Cepillado | 28.000 | 40 |
+| Peluquería | Tinte y color | 85.000 | 120 |
+| Peluquería | Peinado para evento | 60.000 | 60 |
+| Barbería | Corte clásico | 25.000 | 30 |
+| Barbería | Corte y barba | 38.000 | 45 |
+| Barbería | Perfilado de barba | 15.000 | 20 |
+| Barbería | Corte infantil | 20.000 | 30 |
+| Maquillaje | Básico | 45.000 | 45 |
+| Maquillaje | Especial | 75.000 | 60 |
+| Maquillaje | Premium | 110.000 | 90 |
+| Uñas | Básico | 20.000 | 45 |
+| Uñas | Especial | 35.000 | 60 |
+| Uñas | Premium | 50.000 | 90 |
+
+IDs en código: `pel-1`…`pel-4`, `bar-1`…`bar-4`, `maq-1`…`maq-3`, `una-1`…`una-3`.
