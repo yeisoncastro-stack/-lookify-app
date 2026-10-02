@@ -1,4 +1,4 @@
-// Pantalla 9: servicio en progreso (checklist + progreso mock).
+// Pantalla 9: servicio en progreso (checklist + PIN + progreso mock).
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -12,6 +12,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   MOCK_FINAL_MS,
   MOCK_LLEGADA_MS,
+  MOCK_PIN_INGRESO_MS,
   MOCK_SERVICIO_MS,
   MOCK_SERVICIO_TICK_MS,
 } from '../constants/serviceInProgress';
@@ -20,10 +21,11 @@ import {
   mockNotificarProfesionalCancelacion,
   promptCancelarServicio,
 } from '../utils/cancelarServicioAlert';
+import { generarPinServicioMock, pinAccessibilityLabel } from '../utils/mockServicePin';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ServiceInProgress'>;
 
-type Fase = 'llegada' | 'servicio' | 'finalizado';
+type Fase = 'llegada' | 'esperandoPin' | 'servicio' | 'finalizado';
 
 const CHECKLIST_LABELS = [
   'Profesional llegó',
@@ -47,9 +49,12 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
   const servicio = SERVICIOS_POR_CATEGORIA[categoriaId]?.find((s) => s.id === servicioId);
   const datosValidos = Boolean(professional && servicio);
 
+  const [pinServicio] = useState(() => generarPinServicioMock());
+
   const allowExitRef = useRef(false);
   const alertOpenRef = useRef(false);
   const faseRef = useRef<Fase>('llegada');
+  const pinValidadoRef = useRef(false);
   const timerIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const intervalIdRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const servicioElapsedRef = useRef(0);
@@ -58,8 +63,10 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
   const [fase, setFase] = useState<Fase>('llegada');
   const [completedSteps, setCompletedSteps] = useState(0);
   const [progressServicio, setProgressServicio] = useState(0);
+  const [pinValidado, setPinValidado] = useState(false);
 
   faseRef.current = fase;
+  pinValidadoRef.current = pinValidado;
 
   const paymentParams = useMemo(
     () => ({
@@ -142,15 +149,21 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
           clearInterval(intervalIdRef.current);
           intervalIdRef.current = null;
         }
-        setCompletedSteps(2);
+        setCompletedSteps(3);
         setFase('finalizado');
         schedule(() => {
-          setCompletedSteps(3);
           goToPayment();
         }, MOCK_FINAL_MS);
       }
     }, MOCK_SERVICIO_TICK_MS);
   }, [goToPayment, schedule]);
+
+  const onPinValidadoMock = useCallback(() => {
+    setPinValidado(true);
+    setCompletedSteps(2);
+    setFase('servicio');
+    runServicioInterval();
+  }, [runServicioInterval]);
 
   const startSimulation = useCallback(() => {
     clearTimers();
@@ -158,13 +171,16 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
     setFase('llegada');
     setCompletedSteps(0);
     setProgressServicio(0);
+    setPinValidado(false);
 
     schedule(() => {
       setCompletedSteps(1);
-      setFase('servicio');
-      runServicioInterval();
+      setFase('esperandoPin');
+      schedule(() => {
+        onPinValidadoMock();
+      }, MOCK_PIN_INGRESO_MS);
     }, MOCK_LLEGADA_MS);
-  }, [clearTimers, runServicioInterval, schedule]);
+  }, [clearTimers, onPinValidadoMock, schedule]);
 
   const startSimulationRef = useRef(startSimulation);
   startSimulationRef.current = startSimulation;
@@ -180,7 +196,7 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
     promptCancelarServicio({
       alertVisibleRef: alertOpenRef,
       onContinuar: () => {
-        if (faseRef.current === 'llegada') {
+        if (!pinValidadoRef.current) {
           startSimulationRef.current();
         }
       },
@@ -196,7 +212,7 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       if (allowExitRef.current) return;
       e.preventDefault();
-      if (faseRef.current === 'llegada') {
+      if (!pinValidadoRef.current) {
         showCancelarServicioAlert();
       } else {
         handleBackBlocked();
@@ -210,8 +226,11 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
   }
 
   const duracionLabel = `${servicio.duracionMin} min`;
+  const showPin = fase === 'esperandoPin';
+  const showEsperandoProfesional = fase === 'esperandoPin';
   const showProgress = fase === 'servicio' || (fase === 'finalizado' && progressServicio > 0);
   const progressPct = Math.round(progressServicio * 100);
+  const pinDigits = pinServicio.split('');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -220,6 +239,34 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
 
         <Text style={styles.title}>{servicio.nombre}</Text>
         <Text style={styles.subtitle}>Duración acordada: {duracionLabel}</Text>
+
+        {showPin ? (
+          <View style={styles.pinBlock}>
+            <Text style={styles.pinHeading}>Código para iniciar</Text>
+            <View
+              style={styles.pinDigitsRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={pinAccessibilityLabel(pinServicio)}
+            >
+              {pinDigits.map((digit, index) => (
+                <Text key={`${index}-${digit}`} style={styles.pinDigit}>
+                  {digit}
+                </Text>
+              ))}
+            </View>
+            <Text style={styles.pinHint}>
+              Comparte este código con tu profesional para que inicie el servicio.
+            </Text>
+            {showEsperandoProfesional ? (
+              <Text style={styles.pinWaiting}>
+                Esperando que el profesional ingrese el código
+              </Text>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.pinSpacer} />
+        )}
 
         {showProgress ? (
           <View style={styles.progressBlock}>
@@ -248,7 +295,7 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
           })}
         </View>
 
-        {fase === 'llegada' ? (
+        {!pinValidado ? (
           <TouchableOpacity style={styles.cancelButton} onPress={showCancelarServicioAlert}>
             <Text style={styles.cancelButtonText}>Cancelar servicio</Text>
           </TouchableOpacity>
@@ -280,15 +327,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textOnNavyMuted,
     marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pinBlock: {
+    alignSelf: 'stretch',
     marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  pinSpacer: {
+    height: 8,
+    marginBottom: spacing.md,
+  },
+  pinHeading: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textOnNavyMuted,
+    marginBottom: spacing.sm,
+  },
+  pinDigitsRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  pinDigit: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: colors.honey,
+    letterSpacing: 2,
+    minWidth: 36,
+    textAlign: 'center',
+  },
+  pinHint: {
+    fontSize: 13,
+    color: colors.textOnNavyMuted,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: spacing.sm,
+  },
+  pinWaiting: {
+    fontSize: 14,
+    color: colors.textOnNavy,
+    textAlign: 'center',
+    marginTop: spacing.md,
+    fontWeight: '500',
   },
   progressBlock: {
     alignSelf: 'stretch',
     marginBottom: spacing.xl,
   },
   progressSpacer: {
-    height: 48,
-    marginBottom: spacing.xl,
+    height: 24,
+    marginBottom: spacing.lg,
   },
   progressTrack: {
     height: 8,

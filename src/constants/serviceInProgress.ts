@@ -3,6 +3,9 @@
 /** Fase A: hasta marcar «Profesional llegó». */
 export const MOCK_LLEGADA_MS = 2500;
 
+/** Simulación: tiempo hasta que el profesional ingresa el PIN (mock, siempre correcto). */
+export const MOCK_PIN_INGRESO_MS = 3500;
+
 /** Fase B: barra de progreso mientras «Servicio iniciado». */
 export const MOCK_SERVICIO_MS = 8000;
 

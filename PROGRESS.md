@@ -89,12 +89,14 @@ Oferta vía `replace` (Oferta no queda en el stack). **Verificada en celular USB
 ### 9. Servicio en progreso — `src/screens/ServiceInProgressScreen.tsx`
 Fondo navy, checklist de 3 estados (Profesional llegó / Servicio iniciado / Servicio
 finalizado), tiempos mock en `src/constants/serviceInProgress.ts` (`MOCK_LLEGADA_MS`,
-`MOCK_SERVICIO_MS`, `MOCK_FINAL_MS`). Duración oficial del servicio solo como texto
-(`duracionMin` de `mockServices`). Barra de progreso en fase «Servicio iniciado».
-Cancelar/atras solo en fase «Profesional llegó» (`promptCancelarServicio`); desde
-«Servicio iniciado», atrás muestra `alertServicioEnCurso` (un botón, sin costos).
-Fin → `replace('PaymentRating', …)` con params de precio intactos. **Verificada en
-celular USB.**
+`MOCK_PIN_INGRESO_MS`, `MOCK_SERVICIO_MS`, `MOCK_FINAL_MS`). Tras «Profesional llegó»
+el cliente ve un PIN de 4 dígitos (`generarPinServicioMock` en `mockServicePin.ts`, una
+vez por montaje; en producción lo genera el backend al aceptar el servicio y se mantiene
+igual durante toda la solicitud). Texto «Esperando que el profesional ingrese el código»
+hasta validación mock; **INICIADO** solo tras PIN válido. Duración oficial del servicio
+solo como texto (`duracionMin`). Barra de progreso en fase «Servicio iniciado». Cancelar/atras
+hasta validar PIN (`promptCancelarServicio`); después, `alertServicioEnCurso`. Fin →
+`replace('PaymentRating', …)` sin PIN en params. **Pendiente de verificación USB (PIN).**
 
 ### Cambios transversales aplicados a todas las pantallas
 - `SafeAreaView` migrado de `react-native` (deprecado) a
@@ -294,17 +296,35 @@ SOLICITADO
   → BUSCANDO_PROFESIONAL (se envía la solicitud al candidato disponible más cercano)
      → [profesional no responde en 30 s] → siguiente candidato; sigue en BUSCANDO_PROFESIONAL
      → [profesional acepta] → OFERTADO (cliente ve perfil, reseñas, portafolio y precio)
-        → ACEPTADO (por el cliente) → EN_CAMINO → INICIADO → FINALIZADO
+        → ACEPTADO (por el cliente) → EN_CAMINO → [PIN válido] → INICIADO → FINALIZADO
         → RECHAZADO_POR_CLIENTE → vuelve a BUSCANDO_PROFESIONAL (si no se llegó al límite)
   → CANCELADO (en cualquier punto antes de INICIADO)
 ```
 
-**Regla de cancelación en EN_CAMINO:** pendiente de definir. En UI (pantalla 8):
-`promptCancelarServicio` con copy neutro (sin montos ni promesas de costo); mock de
-notificación al profesional solo en código.
+**Cancelación por el cliente:** gratis hasta **INICIADO** (incluye **OFERTADO** — rechazar
+oferta / «Buscar otro profesional» — y **EN_CAMINO**, pantallas 8–9 antes del PIN).
+Con el servicio **INICIADO** no se permite cancelar (atrás bloqueado con
+`alertServicioEnCurso`). El desplazamiento del profesional es riesgo comercial del
+profesional, como en apps de servicios bajo demanda. En UI: alertas con copy neutro
+(`promptCancelarSolicitud`, `promptCancelarServicio`); mock de notificación al profesional
+solo en código.
 
-**Rechazar la oferta (OFERTADO, pantalla 7):** gratis para el cliente, sin penalización
-(«Buscar otro profesional» vuelve a matching con contador de rechazos).
+**Backend (documentado, no implementado):**
+
+- Si **cancela el profesional:** el cliente no paga nada y se busca otro profesional.
+- **Registrar cancelaciones por cliente** (sobre todo tras aceptar) para detectar abuso;
+  política de límites cuando existan datos reales.
+
+### PIN de inicio del servicio
+
+Cuando el profesional llega (pantalla 9), el cliente ve un **PIN de 4 dígitos** para
+autorizar el inicio. El profesional debe ingresarlo en su app; en frontend se simula
+entrada correcta tras `MOCK_PIN_INGRESO_MS`. **INICIADO** exige PIN válido (mock siempre
+correcto). El PIN **no** viaja en params hacia la pantalla 10; en **producción** lo
+genera el backend al aceptar el servicio y permanece fijo durante toda la solicitud.
+
+**Backend (documentado, no implementado):** máximo **3 intentos fallidos** de PIN; luego
+bloqueo (detalle TBD).
 
 ### Regla de los 30 s
 
@@ -355,6 +375,8 @@ La pantalla 7 muestra el desglose **antes** de aceptar:
   datos personales, Selección de servicios, Carga de certificados, Estado de
   verificación, Panel principal (incluye el toggle Disponible/Ocupado), Solicitud
   entrante, Servicio en curso, Historial/ingresos (incluye la gestión de portafolio).
+  La pantalla **«Servicio en curso»** del profesional deberá incluir **ingreso del PIN**
+  del cliente antes de pasar a INICIADO (alineado con pantalla 9 del cliente).
 - Las duraciones y precios de `mockServices.ts` son **oficiales**. Catálogo vigente:
 
 | Categoría | Servicio | Precio (COP) | Duración (min) |
