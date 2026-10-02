@@ -71,9 +71,20 @@ cancelar sin costo (sin checklist). Éxito → `replace('ProfessionalOffer', …
 Fondo beige, tarjeta con acento honey: perfil, portafolio, reseña destacada y
 desglose vía `src/utils/pricing.ts` (`formatCOP`). `distanciaKm` de la ruta (1 decimal)
 para UI, domicilio y params; ETA con `VELOCIDAD_ESTIMADA_KM_H` en `constants/geo.ts`
-(mín. 1 min). «Aceptar» → `navigate('Tracking', …)` sin `allowExitRef` (pantalla 8
-pendiente). «Buscar otro» → `allowExitRef` + `replace('Matching', …)` con rechazo.
-Atrás/gesto: misma alerta que Matching. Datos inválidos → `reset` Home.
+(mín. 1 min). «Aceptar» → `replace('Tracking', …)` con `allowExitRef` antes del
+`replace`. «Buscar otro» → `allowExitRef` +
+`replace('Matching', …)` con rechazo. Atrás/gesto: `promptCancelarSolicitud` (cancelación
+sin costo). Datos inválidos → `reset` Home.
+
+### 8. Seguimiento en vivo — `src/screens/TrackingScreen.tsx`
+Mapa **`MapView` + `PROVIDER_DEFAULT`** (no placeholder), marcadores cliente (navy) y
+profesional (honey). En Expo Go (Android) el mapa puede verse en blanco por la API key
+embebida vencida (problema conocido, no es bug del código). Pill «En camino», tarjeta
+inferior con ETA/distancia animados (`MOCK_TRACKING_MS` 12 s), profesional + servicio,
+Llamar/Mensaje (Alert mock), «Cancelar servicio» y atrás/gesto con
+`promptCancelarServicio`. Simulación lineal hacia `MOCK_CLIENT_LOCATION`; al terminar →
+`replace('ServiceInProgress', …)`. Cancelar confirma con `reset` Home. Entrada desde
+Oferta vía `replace` (Oferta no queda en el stack). **Verificada en celular USB.**
 
 ### Cambios transversales aplicados a todas las pantallas
 - `SafeAreaView` migrado de `react-native` (deprecado) a
@@ -90,16 +101,9 @@ Atrás/gesto: misma alerta que Matching. Datos inválidos → `reset` Home.
 
 ## 2. Pantallas pendientes
 
-### 8. Seguimiento en vivo — `TrackingScreen.tsx`
-Mapa con `react-native-maps` y `PROVIDER_DEFAULT` (igual que Inicio) con un
-marcador del profesional y otro del cliente. Tarjeta inferior con tiempo
-estimado, distancia, datos del profesional, botones de llamar y mensaje, y
-"Cancelar servicio". Tras un tiempo simulado pasa a la pantalla 9.
-
-### 9. Servicio en progreso — `ServiceInProgressScreen.tsx`
-Fondo navy, cronómetro circular (puede ser una barra de progreso simple por
-ahora) y checklist de 3 estados: Profesional llegó / Servicio iniciado /
-Servicio finalizado. Al completarse navega a la pantalla 10.
+### 9. Servicio en progreso — `src/screens/ServiceInProgressScreen.tsx`
+ServiceInProgressScreen.tsx existe como placeholder de navegación desde Tracking;
+pantalla 9 real sin construir ni verificar.
 
 ### 10. Pago y calificación — `PaymentRatingScreen.tsx`
 Ícono de check, resumen de precio desglosado, método de pago, selector de 1 a 5
@@ -127,7 +131,9 @@ fallar en runtime. El mismo patrón se usa en `HomeScreen` para el mapa de
 íconos por categoría.
 
 El precio de un servicio se guarda en el campo `precio` y representa
-**únicamente el servicio**; el domicilio se suma aparte en la pantalla 10.
+**únicamente el servicio**; el domicilio se suma en el desglose de la pantalla 7
+(`precioServicio + precioDomicilio = precioTotal`) y esos valores viajan por
+parámetros hasta la 10, que los muestra de nuevo sin recalcular.
 
 ### Patrón de espaciado
 Regla según el tipo de contenido de la pantalla:
@@ -177,10 +183,20 @@ es que la API key de Google Maps que Expo Go trae embebida para Android en
 SDK 57 está vencida, y una app no puede sobreescribirla desde su propio
 `app.json` porque Expo Go usa la suya.
 
-La solución es un **development build** con una API key propia:
-habilitar *Maps SDK for Android* en Google Cloud Console, poner la key en
+**¿Renovar una key propia “gratis” arregla Expo Go?** No. Aunque en Google Cloud
+se cree una API key con crédito mensual (Maps exige cuenta de facturación
+habilitada en el proyecto, aunque el uso quede dentro del free tier), esa key **no
+sustituye** la embebida en el binario de Expo Go. Solo aplica en un binario propio.
+
+La solución para tiles de Google es un **development build** con API key propia:
+habilitar *Maps SDK for Android*, poner la key en
 `plugins.react-native-maps.androidGoogleMapsApiKey` y compilar con
 `npx expo run:android`. Recargar no basta: hay que recompilar el binario.
+
+**Alternativa solo para demo en Expo Go (opcional, no implementada):** capa
+`UrlTile` con tiles OpenStreetMap encima de `MapView` + `PROVIDER_DEFAULT`, sin
+migrar a MapLibre. Seguimiento (pantalla 8) sigue el mismo criterio que Inicio
+hasta que exista development build.
 
 ### Emulador de Android Studio
 El emulador va muy lento en el equipo de desarrollo y no resultó usable. La vía
@@ -212,10 +228,13 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
 
 ### Navegación
 - Pantalla 5 → `Matching` con params completos. Matching → `replace('ProfessionalOffer', …)`.
-  Oferta → `replace('Matching', …)` al rechazar o `navigate('Tracking', …)` al aceptar;
-  **`Tracking` tipado pero sin componente** (warning intencional hasta pantalla 8).
+  Oferta → `replace('Matching', …)` al rechazar; al aceptar → `replace('Tracking', …)`.
+  Tracking → `replace('ServiceInProgress', …)` al fin del mock de llegada. Params de
+  precio y distancia siguen hasta la pantalla 10.
+- **`ServiceInProgress`:** placeholder mínimo hasta la pantalla 9 completa.
 - **Resuelto (Fase 3):** tras el checklist, `replace` monta ProfessionalOffer; el atrás en
-  Oferta vuelve a pedir confirmación salvo salidas con `allowExitRef`.
+  Oferta pide confirmación salvo salidas con `allowExitRef`. En Tracking (8): mismo patrón
+  de atrás; Oferta no debe quedar bajo Tracking en el stack.
 - El stack usa `headerShown: false`; el retorno visual está en
   `src/components/BackHeader.tsx` (MaterialCommunityIcons `arrow-left`, área táctil
   44×44, `accessibilityLabel="Volver"`). Props: `title?`, `onBack?` (default
@@ -270,6 +289,13 @@ SOLICITADO
   → CANCELADO (en cualquier punto antes de INICIADO)
 ```
 
+**Regla de cancelación en EN_CAMINO:** pendiente de definir. En UI (pantalla 8):
+`promptCancelarServicio` con copy neutro (sin montos ni promesas de costo); mock de
+notificación al profesional solo en código.
+
+**Rechazar la oferta (OFERTADO, pantalla 7):** gratis para el cliente, sin penalización
+(«Buscar otro profesional» vuelve a matching con contador de rechazos).
+
 ### Regla de los 30 s
 
 Si el profesional no responde, se pasa al siguiente candidato y el profesional sigue
@@ -302,7 +328,11 @@ La pantalla 7 muestra el desglose **antes** de aceptar:
 - **precioDomicilio** = 4.000 + 1.200 × km, con tope de 7.000.
 - **Cambio:** domicilio ajustado a base $4.000 + $1.200/km, tope $7.000 (equivalente a un
   pasaje de ida y vuelta del profesional); antes era base $5.000, tope $15.000.
-- La comisión de Lookify (15 % sobre el servicio) **no** se muestra al cliente.
+- La comisión de Lookify (15 % sobre el servicio) **no** se muestra al cliente. Base de
+  la comisión: **`precioServicio` ya ajustado** (catálogo × ajuste ±20 % en
+  `calcularPrecioServicio`), no el precio base del catálogo. Constante
+  `COMISION_LOOKIFY` en `pricing.ts` (reservada para backend/admin; el desglose al
+  cliente no incluye comisión).
 - Esos mismos valores viajan por parámetros hasta la pantalla 10; no se recalculan de
   otra forma.
 

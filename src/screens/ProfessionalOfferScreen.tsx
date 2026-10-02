@@ -114,7 +114,8 @@ export default function ProfessionalOfferScreen({ navigation, route }: Props) {
 
   const handleAceptar = () => {
     if (!desglose || !professional || !servicio) return;
-    navigation.navigate('Tracking', {
+    allowExitRef.current = true;
+    navigation.replace('Tracking', {
       professionalId,
       servicioId,
       categoriaId,
