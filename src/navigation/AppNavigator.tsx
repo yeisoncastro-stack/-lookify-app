@@ -17,6 +17,7 @@ import MatchingScreen from '../screens/MatchingScreen';
 import ProfessionalOfferScreen from '../screens/ProfessionalOfferScreen';
 import TrackingScreen from '../screens/TrackingScreen';
 import ServiceInProgressScreen from '../screens/ServiceInProgressScreen';
+import PaymentRatingScreen from '../screens/PaymentRatingScreen';
 import { CategoriaId } from '../data/mockProfessionals';
 
 export type MatchingRouteParams = {
@@ -45,6 +46,8 @@ export type TrackingRouteParams = {
 
 export type ServiceInProgressRouteParams = TrackingRouteParams;
 
+export type PaymentRatingRouteParams = TrackingRouteParams;
+
 export type RootStackParamList = {
   Login: undefined;
   AccountType: undefined;
@@ -56,6 +59,7 @@ export type RootStackParamList = {
   ProfessionalOffer: ProfessionalOfferRouteParams;
   Tracking: TrackingRouteParams;
   ServiceInProgress: ServiceInProgressRouteParams;
+  PaymentRating: PaymentRatingRouteParams;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -78,6 +82,7 @@ export default function AppNavigator() {
           <Stack.Screen name="ProfessionalOffer" component={ProfessionalOfferScreen} />
           <Stack.Screen name="Tracking" component={TrackingScreen} />
           <Stack.Screen name="ServiceInProgress" component={ServiceInProgressScreen} />
+          <Stack.Screen name="PaymentRating" component={PaymentRatingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

@@ -86,6 +86,16 @@ Llamar/Mensaje (Alert mock), «Cancelar servicio» y atrás/gesto con
 `replace('ServiceInProgress', …)`. Cancelar confirma con `reset` Home. Entrada desde
 Oferta vía `replace` (Oferta no queda en el stack). **Verificada en celular USB.**
 
+### 9. Servicio en progreso — `src/screens/ServiceInProgressScreen.tsx`
+Fondo navy, checklist de 3 estados (Profesional llegó / Servicio iniciado / Servicio
+finalizado), tiempos mock en `src/constants/serviceInProgress.ts` (`MOCK_LLEGADA_MS`,
+`MOCK_SERVICIO_MS`, `MOCK_FINAL_MS`). Duración oficial del servicio solo como texto
+(`duracionMin` de `mockServices`). Barra de progreso en fase «Servicio iniciado».
+Cancelar/atras solo en fase «Profesional llegó» (`promptCancelarServicio`); desde
+«Servicio iniciado», atrás muestra `alertServicioEnCurso` (un botón, sin costos).
+Fin → `replace('PaymentRating', …)` con params de precio intactos. **Verificada en
+celular USB.**
+
 ### Cambios transversales aplicados a todas las pantallas
 - `SafeAreaView` migrado de `react-native` (deprecado) a
   `react-native-safe-area-context`.
@@ -101,11 +111,10 @@ Oferta vía `replace` (Oferta no queda en el stack). **Verificada en celular USB
 
 ## 2. Pantallas pendientes
 
-### 9. Servicio en progreso — `src/screens/ServiceInProgressScreen.tsx`
-ServiceInProgressScreen.tsx existe como placeholder de navegación desde Tracking;
-pantalla 9 real sin construir ni verificar.
-
-### 10. Pago y calificación — `PaymentRatingScreen.tsx`
+### 10. Pago y calificación — `src/screens/PaymentRatingScreen.tsx`
+PaymentRatingScreen.tsx existe como placeholder de navegación desde ServiceInProgress;
+pantalla 10 real sin construir ni verificar. El placeholder incluye «Volver al inicio»
+(`reset` Home) para pruebas.
 Ícono de check, resumen de precio desglosado, método de pago, selector de 1 a 5
 estrellas y comentario opcional. "Enviar calificación" regresa a Inicio.
 Regla de negocio: el desglose es siempre
@@ -229,9 +238,10 @@ en web. Si se necesita probar Inicio en navegador, habría que crear un
 ### Navegación
 - Pantalla 5 → `Matching` con params completos. Matching → `replace('ProfessionalOffer', …)`.
   Oferta → `replace('Matching', …)` al rechazar; al aceptar → `replace('Tracking', …)`.
-  Tracking → `replace('ServiceInProgress', …)` al fin del mock de llegada. Params de
-  precio y distancia siguen hasta la pantalla 10.
-- **`ServiceInProgress`:** placeholder mínimo hasta la pantalla 9 completa.
+  Tracking → `replace('ServiceInProgress', …)` al fin del mock de llegada. ServiceInProgress
+  → `replace('PaymentRating', …)` al completar el checklist mock. Params de precio y
+  distancia siguen hasta la pantalla 10.
+- **`PaymentRating`:** placeholder mínimo hasta la pantalla 10 completa.
 - **Resuelto (Fase 3):** tras el checklist, `replace` monta ProfessionalOffer; el atrás en
   Oferta pide confirmación salvo salidas con `allowExitRef`. En Tracking (8): mismo patrón
   de atrás; Oferta no debe quedar bajo Tracking en el stack.
