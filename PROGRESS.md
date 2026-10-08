@@ -1,5 +1,12 @@
 # Lookify — Estado del proyecto
 
+**Flujo cliente (pantallas 1 a 10): completo.** Verificado en celular por USB y
+subido a GitHub (`e0696de` en `main`). El siguiente bloque es la **App Profesional**
+(10 pantallas). Se empieza por `RegisterProfessionalScreen.tsx`, rehecho como
+wizard de 4 pasos: Datos personales / Selección de servicios / Carga de
+certificados / Estado de verificación. Incluye filtro de documento C.C./Pasaporte
+y reutiliza `validators.ts`.
+
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
 datos ni llamadas HTTP: todos los datos son mocks locales.
@@ -121,7 +128,24 @@ o suma de precios inconsistente → `reset` Home. **Verificada en celular USB.**
 
 ## 2. Pantallas pendientes
 
-_(Flujo cliente 1–10 construido y verificado en celular USB. Siguiente fase: App Profesional / backend.)_
+Flujo cliente 1–10: construido, verificado en celular USB y subido a GitHub.
+Siguiente bloque: **App Profesional** (10 pantallas). Primera tarea:
+`RegisterProfessionalScreen.tsx` como wizard de 4 pasos (Datos personales /
+Selección de servicios / Carga de certificados / Estado de verificación), con
+filtro C.C./Pasaporte y `validators.ts`.
+
+### App Profesional — 10 pantallas oficiales
+
+1. Login
+2. Tipo de cuenta
+3. Registro datos personales
+4. Selección de servicios
+5. Carga de certificados
+6. Estado de verificación
+7. Panel principal (con toggle Disponible/Ocupado)
+8. Solicitud entrante (ventana de 30 s)
+9. Servicio en curso (con ingreso del PIN del cliente)
+10. Historial/ingresos (con gestión de portafolio)
 
 ---
 
@@ -185,7 +209,19 @@ asumieron.
 
 ---
 
-## 4. Pendientes técnicos conocidos
+## 4. Pendientes técnicos
+
+### Mapa — tarea aparte (pendiente de definir)
+
+El mapa se ve en blanco en Expo Go Android. Hipótesis: la API key de Google
+embebida en Expo Go está vencida en SDK 57. Afecta **Inicio** y **Tracking**.
+Hay que definir cuál usar antes de la sustentación:
+
+1. Development build con key propia de Google Maps.
+2. Apple Maps en iPhone.
+3. Tiles de OpenStreetMap / MapLibre.
+
+El detalle ya registrado sigue abajo; la opción no está cerrada.
 
 ### El mapa se ve vacío en Expo Go (Android)
 El mapa dibuja su fondo y el logo de Google, pero los tiles nunca cargan y los
@@ -276,7 +312,9 @@ Expo Go → Reload, o cerrar y reabrir la app).
 pero **no forma parte de las 10 pantallas del flujo cliente** y no se ha
 revisado contra ninguna spec. Sigue con el layout viejo (formulario y botón
 dentro de un único `ScrollView`), así que arrastra el problema de espacio vacío
-abajo que ya se corrigió en las demás.
+abajo que ya se corrigió en las demás. El siguiente bloque lo rehace como wizard
+de 4 pasos (Datos personales / Selección de servicios / Carga de certificados /
+Estado de verificación), con filtro C.C./Pasaporte y `validators.ts`.
 
 ---
 
@@ -384,10 +422,10 @@ de deuda y/o tope de deuda que bloquea aceptar nuevos servicios en efectivo.
   construya.
 - Las **10 pantallas oficiales** de App Profesional: Login, Tipo de cuenta, Registro
   datos personales, Selección de servicios, Carga de certificados, Estado de
-  verificación, Panel principal (incluye el toggle Disponible/Ocupado), Solicitud
-  entrante, Servicio en curso, Historial/ingresos (incluye la gestión de portafolio).
-  La pantalla **«Servicio en curso»** del profesional deberá incluir **ingreso del PIN**
-  del cliente antes de pasar a INICIADO (alineado con pantalla 9 del cliente).
+  verificación, Panel principal (con toggle Disponible/Ocupado), Solicitud
+  entrante (ventana de 30 s), Servicio en curso (con ingreso del PIN del cliente),
+  Historial/ingresos (con gestión de portafolio). La pantalla **«Servicio en curso»**
+  exige el PIN del cliente antes de pasar a INICIADO (alineado con la pantalla 9).
 - Las duraciones y precios de `mockServices.ts` son **oficiales**. Catálogo vigente:
 
 | Categoría | Servicio | Precio (COP) | Duración (min) |
