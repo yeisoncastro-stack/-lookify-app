@@ -21,6 +21,10 @@ function SessionDetails({ params }: { params: ProfessionalSessionRouteParams }) 
         {params.profesionalId}
       </Text>
       <Text style={styles.detailLine}>
+        <Text style={styles.detailLabel}>solicitudId: </Text>
+        {params.solicitudId ?? '—'}
+      </Text>
+      <Text style={styles.detailLine}>
         <Text style={styles.detailLabel}>nombre: </Text>
         {params.nombre}
       </Text>

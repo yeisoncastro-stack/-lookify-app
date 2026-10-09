@@ -1,5 +1,8 @@
 export type ServiceErrorCode =
   | 'INVALID_CREDENTIALS'
+  | 'EMAIL_DUPLICATE'
+  | 'DOCUMENTO_DUPLICADO'
+  | 'VALIDATION'
   | 'NETWORK'
   | 'UNKNOWN';
 

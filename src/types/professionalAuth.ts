@@ -19,6 +19,7 @@ export interface SesionProfesional {
 /** Params tipados para placeholders post-login (sin contexto global en este turno). */
 export type ProfessionalSessionRouteParams = {
   profesionalId: string;
+  solicitudId?: string;
   nombre: string;
   email: string;
   estadoSolicitud: EstadoSolicitudProfesional;

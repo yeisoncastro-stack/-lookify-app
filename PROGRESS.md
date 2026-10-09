@@ -137,7 +137,7 @@ renumerará** la lista oficial hasta confirmación explícita.
 _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 
 1. Login Profesional — **verificada en celular USB**
-2. Registro (creación de cuenta; pantalla `RegisterProfessionalScreen`, por reconstruir)
+2. Registro — **verificada en celular USB**
 3. Selección de servicios
 4. Carga de certificados
 5. Estado de verificación
@@ -178,18 +178,55 @@ Placeholders post-login incluyen **«Cerrar sesión (temporal)»** (`reset` a
 `ProfessionalLogin`) para probar las 5 cuentas sin recargar la app; se reemplazará
 por cierre de sesión real (JWT + limpieza de token).
 
-**Pendiente (a decidir en pantalla 2 Registro):** contexto de sesión y onboarding
-compartido entre pantallas pro; token JWT en `expo-secure-store`. Este turno **no**
-hay contexto ni estado global de sesión (solo params de navegación tras login).
+**Onboarding entre pantallas 3–5:** params tipados (`ProfessionalSessionRouteParams`,
+incluye `solicitudId` tras registro). **Sin contexto global** por ahora. Pendiente
+opcional: contexto de sesión + JWT en `expo-secure-store` (decidir más adelante).
+
+**Pendiente técnico:** `ProfessionalStackNavigator` separado del stack cliente — tarea
+aparté con su propia prueba USB **antes de la pantalla 3** (stacks siguen unificados).
 
 **Backend pendiente (Login Pro):** límite de intentos y bloqueo; JWT y almacenamiento
 seguro (`expo-secure-store`); recuperación de contraseña.
 
-**Contrato de servicios previsto (siguientes pantallas; no implementado aún):**
+### App Profesional — Registro (pantalla 2 provisional)
+
+`RegisterProfessionalScreen.tsx`: mismo patrón que registro cliente (validaciones
+`validators.ts`, logo 96 px, BackHeader, footer fijo). Una casilla acepta **Términos
+y Política** (enlaces a `ProfessionalTermsRead` / `ProfessionalPrivacyRead`; textos en
+`src/constants/legal/`). Versiones legales en borrador (`TERMS_VERSION` /
+`DATA_POLICY_VERSION`, p. ej. `2026-10-borrador-v1`); vigencia mostrada como
+«Pendiente de publicación (borrador)». La **fecha real de vigencia** y la versión
+definitiva se fijan cuando un abogado apruebe el texto y se lance la app. Banner
+«BORRADOR sujeto a revisión legal» solo en `__DEV__`. Un abogado debe revisar textos
+antes del lanzamiento y decidir si se requieren **casillas separadas** para términos
+y política.
+
+Consentimiento: el frontend envía `{ version, aceptadoEn }` por documento; **`aceptadoEn`
+es solo informativo** — el backend registrará su propio sello de tiempo e **IP**.
+
+Datos legales **pendientes antes del lanzamiento** (política pro): razón social, NIT,
+domicilio y correo para solicitudes de datos personales (en borrador aparecen como
+`[PENDIENTE]` y banner en `__DEV__`).
+
+Registro vía `getProfessionalRegistrationService().registrarProfesional` (mock +
+`mockProfessionalRegistryStore`). Errores: `EMAIL_DUPLICATE`, `DOCUMENTO_DUPLICADO`,
+`NETWORK`. `fechaNacimiento` en payload como **YYYY-MM-DD local** (no `toISOString`).
+Éxito → `reset` a placeholder selección de servicios con `solicitudId`. **Verificada
+en celular USB.**
+
+**Pendiente aparte:** alinear cláusula de intermediario en T&C del **cliente**
+(`RegisterClientScreen` verificado) — no mezclar en el mismo cambio.
+
+**Backend pendiente (Registro):** rate limit; unicidad real de correo/documento;
+política de contraseñas; consentimiento con IP y timestamp servidor.
+
+**Pruebas Jest:** commit aparte cuando las pantallas pro estén verificadas en USB.
+
+**Contrato de servicios (resto; no implementado aún):**
 
 | Pantalla pro (prov.) | Función servicio | HTTP previsto (TBD) |
 |---------------------|------------------|---------------------|
-| 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — T&C con fecha y versión; devuelve `profesionalId`, `solicitudId`; correo duplicado aquí |
+| 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — implementado mock |
 | 3 Selección servicios | `guardarServicios` | TBD |
 | 4 Certificados | `subirCertificado`, `enviarSolicitudVerificacion` | TBD (multipart) |
 | 5 Estado verificación | `obtenerEstadoVerificacion` | TBD |
@@ -198,6 +235,8 @@ Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHA
 
 `src/services/mock/mockProfessionalAccounts.ts` guarda contraseñas en texto plano
 **solo para demo**; se elimina al conectar autenticación real.
+`mockProfessionalRegistryStore` también guarda contraseñas en texto plano **solo en
+memoria** (registros nuevos del mock); desaparece al conectar el backend real.
 
 ---
 
@@ -206,8 +245,8 @@ Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHA
 ### Capa de servicios (App Profesional)
 Las pantallas pro hablan solo con `src/services/` (interfaz + mock + `ServiceError`).
 No importan `mockUsers`, `mockProfessionals` ni seeds directamente. Punto de entrada:
-`getProfessionalAuthService()` (implementación intercambiable). Login Pro ya sigue
-este patrón.
+`getProfessionalAuthService()`, `getProfessionalRegistrationService()` (implementación
+intercambiable). Login y registro pro ya siguen este patrón.
 
 ### Separación de los archivos de datos mock
 `mockProfessionals.ts` modela **profesionales** (incluye `EstadoProfesional`,
@@ -368,15 +407,17 @@ Expo Go → Reload, o cerrar y reabrir la app).
 ### App Profesional — navegación (Login)
 - Tipo de cuenta → Continuar como profesional → `ProfessionalLogin` (ya no abre
   directo `RegisterProfessional`).
-- Login Pro → Registrarme → `RegisterProfessional` (stub); al volver, segmento en Ingresar.
+- Login Pro → Registrarme → `RegisterProfessional`; al volver, segmento en Ingresar.
+- Registro OK → `reset` a `ProfessionalServiceSelectionPlaceholder` con `solicitudId`.
+- Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead`.
 - Login Pro → ingreso OK → `reset` a placeholder según `estadoSolicitud` / `onboardingPaso`.
 - Placeholders: `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`,
   `ProfessionalServiceSelectionPlaceholder`, `ProfessionalCertificateUploadPlaceholder`.
 
 ### Registro de profesional
-`RegisterProfessionalScreen.tsx` es la futura pantalla 2 (Registro). Se alcanza
-desde Login Pro → Registrarme. Sigue con el layout viejo (stub); se reconstruirá
-en su propio turno. **No forma parte del flujo cliente verificado.**
+Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:
+Login Pro → Registrarme. **No forma parte del flujo cliente verificado.** **Verificada
+en celular USB** (ver §2).
 
 ---
 

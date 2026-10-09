@@ -23,6 +23,8 @@ import ProfessionalDashboardPlaceholderScreen from '../screens/professional/plac
 import ProfessionalVerificationPlaceholderScreen from '../screens/professional/placeholders/ProfessionalVerificationPlaceholderScreen';
 import ProfessionalServiceSelectionPlaceholderScreen from '../screens/professional/placeholders/ProfessionalServiceSelectionPlaceholderScreen';
 import ProfessionalCertificateUploadPlaceholderScreen from '../screens/professional/placeholders/ProfessionalCertificateUploadPlaceholderScreen';
+import ProfessionalTermsReadScreen from '../screens/professional/ProfessionalTermsReadScreen';
+import ProfessionalPrivacyReadScreen from '../screens/professional/ProfessionalPrivacyReadScreen';
 import { CategoriaId } from '../data/mockProfessionals';
 import { ProfessionalSessionRouteParams } from '../types/professionalAuth';
 
@@ -59,6 +61,8 @@ export type RootStackParamList = {
   AccountType: undefined;
   RegisterClient: undefined;
   RegisterProfessional: undefined;
+  ProfessionalTermsRead: undefined;
+  ProfessionalPrivacyRead: undefined;
   ProfessionalLogin: undefined;
   ProfessionalDashboardPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalVerificationPlaceholder: ProfessionalSessionRouteParams;
@@ -87,6 +91,8 @@ export default function AppNavigator() {
           <Stack.Screen name="AccountType" component={AccountTypeScreen} />
           <Stack.Screen name="RegisterClient" component={RegisterClientScreen} />
           <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
+          <Stack.Screen name="ProfessionalTermsRead" component={ProfessionalTermsReadScreen} />
+          <Stack.Screen name="ProfessionalPrivacyRead" component={ProfessionalPrivacyReadScreen} />
           <Stack.Screen name="ProfessionalLogin" component={ProfessionalLoginScreen} />
           <Stack.Screen
             name="ProfessionalDashboardPlaceholder"
