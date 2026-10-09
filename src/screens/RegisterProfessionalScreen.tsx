@@ -27,7 +27,6 @@ export default function RegisterProfessionalScreen() {
   const handleSubmit = () => {
     // TODO: POST /auth/register/professional con { ...form, categorias: categoriasSeleccionadas }
     // El backend debe crear el registro con estado "pendiente de verificación".
-    console.log('Registrar profesional', form, categoriasSeleccionadas);
   };
 
   return (

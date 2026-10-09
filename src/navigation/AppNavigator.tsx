@@ -18,7 +18,13 @@ import ProfessionalOfferScreen from '../screens/ProfessionalOfferScreen';
 import TrackingScreen from '../screens/TrackingScreen';
 import ServiceInProgressScreen from '../screens/ServiceInProgressScreen';
 import PaymentRatingScreen from '../screens/PaymentRatingScreen';
+import ProfessionalLoginScreen from '../screens/professional/ProfessionalLoginScreen';
+import ProfessionalDashboardPlaceholderScreen from '../screens/professional/placeholders/ProfessionalDashboardPlaceholderScreen';
+import ProfessionalVerificationPlaceholderScreen from '../screens/professional/placeholders/ProfessionalVerificationPlaceholderScreen';
+import ProfessionalServiceSelectionPlaceholderScreen from '../screens/professional/placeholders/ProfessionalServiceSelectionPlaceholderScreen';
+import ProfessionalCertificateUploadPlaceholderScreen from '../screens/professional/placeholders/ProfessionalCertificateUploadPlaceholderScreen';
 import { CategoriaId } from '../data/mockProfessionals';
+import { ProfessionalSessionRouteParams } from '../types/professionalAuth';
 
 export type MatchingRouteParams = {
   categoriaId: CategoriaId;
@@ -53,6 +59,11 @@ export type RootStackParamList = {
   AccountType: undefined;
   RegisterClient: undefined;
   RegisterProfessional: undefined;
+  ProfessionalLogin: undefined;
+  ProfessionalDashboardPlaceholder: ProfessionalSessionRouteParams;
+  ProfessionalVerificationPlaceholder: ProfessionalSessionRouteParams;
+  ProfessionalServiceSelectionPlaceholder: ProfessionalSessionRouteParams;
+  ProfessionalCertificateUploadPlaceholder: ProfessionalSessionRouteParams;
   Home: undefined;
   ServiceSelection: { categoriaId: CategoriaId; categoriaNombre: string };
   Matching: MatchingRouteParams;
@@ -76,6 +87,23 @@ export default function AppNavigator() {
           <Stack.Screen name="AccountType" component={AccountTypeScreen} />
           <Stack.Screen name="RegisterClient" component={RegisterClientScreen} />
           <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
+          <Stack.Screen name="ProfessionalLogin" component={ProfessionalLoginScreen} />
+          <Stack.Screen
+            name="ProfessionalDashboardPlaceholder"
+            component={ProfessionalDashboardPlaceholderScreen}
+          />
+          <Stack.Screen
+            name="ProfessionalVerificationPlaceholder"
+            component={ProfessionalVerificationPlaceholderScreen}
+          />
+          <Stack.Screen
+            name="ProfessionalServiceSelectionPlaceholder"
+            component={ProfessionalServiceSelectionPlaceholderScreen}
+          />
+          <Stack.Screen
+            name="ProfessionalCertificateUploadPlaceholder"
+            component={ProfessionalCertificateUploadPlaceholderScreen}
+          />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
           <Stack.Screen name="Matching" component={MatchingScreen} />

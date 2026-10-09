@@ -25,7 +25,7 @@ export default function AccountTypeScreen({ navigation }: AccountTypeScreenProps
     if (selected === 'client') {
       navigation.navigate('RegisterClient');
     } else {
-      navigation.navigate('RegisterProfessional');
+      navigation.navigate('ProfessionalLogin');
     }
   };
 

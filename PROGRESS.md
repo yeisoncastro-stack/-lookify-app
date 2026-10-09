@@ -1,11 +1,9 @@
 # Lookify — Estado del proyecto
 
 **Flujo cliente (pantallas 1 a 10): completo.** Verificado en celular por USB y
-subido a GitHub (`e0696de` en `main`). El siguiente bloque es la **App Profesional**
-(10 pantallas). Se empieza por `RegisterProfessionalScreen.tsx`, rehecho como
-wizard de 4 pasos: Datos personales / Selección de servicios / Carga de
-certificados / Estado de verificación. Incluye filtro de documento C.C./Pasaporte
-y reutiliza `validators.ts`.
+subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
+**pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
+pantalla quedó descartado). Entrada pro desde Tipo de cuenta → Login Profesional.
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -129,12 +127,26 @@ o suma de precios inconsistente → `reset` Home. **Verificada en celular USB.**
 ## 2. Pantallas pendientes
 
 Flujo cliente 1–10: construido, verificado en celular USB y subido a GitHub.
-Siguiente bloque: **App Profesional** (10 pantallas). Primera tarea:
-`RegisterProfessionalScreen.tsx` como wizard de 4 pasos (Datos personales /
-Selección de servicios / Carga de certificados / Estado de verificación), con
-filtro C.C./Pasaporte y `validators.ts`.
+En curso: **App Profesional** pantalla por pantalla. Las pantallas oficiales del
+mockup siguen siendo 10 (incluyen Tipo de cuenta); la **numeración provisional**
+de implementación (9 pantallas pro, Tipo de cuenta compartida con el cliente) **no
+renumerará** la lista oficial hasta confirmación explícita.
 
-### App Profesional — 10 pantallas oficiales
+### App Profesional — numeración provisional de implementación
+
+_(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
+
+1. Login Profesional — **verificada en celular USB**
+2. Registro (creación de cuenta; pantalla `RegisterProfessionalScreen`, por reconstruir)
+3. Selección de servicios
+4. Carga de certificados
+5. Estado de verificación
+6. Panel principal (toggle Disponible/Ocupado)
+7. Solicitud entrante (ventana de 30 s)
+8. Servicio en curso (ingreso PIN del cliente)
+9. Historial/ingresos (gestión de portafolio)
+
+### App Profesional — 10 pantallas oficiales (sin renumerar)
 
 1. Login
 2. Tipo de cuenta
@@ -147,9 +159,55 @@ filtro C.C./Pasaporte y `validators.ts`.
 9. Servicio en curso (con ingreso del PIN del cliente)
 10. Historial/ingresos (con gestión de portafolio)
 
+### App Profesional — Login (pantalla 1 provisional)
+
+`src/screens/professional/ProfessionalLoginScreen.tsx`: cabecera navy con
+`BackHeader`, logo real (`assets/logo-lookify.png`, 96 px), **Lookify PRO**,
+eslogan «Convierte tu talento en ingresos»; tarjeta blanca; segmento
+Ingresar | Registrarme; validación como cliente (`validators.ts`); login vía
+`getProfessionalAuthService()` (mock en `src/services/mock/`). Tras login,
+`resolvePostLoginRoute` + `navigation.reset` a placeholders «sin construir» con
+params de sesión tipados. **Registrarme** navega a `RegisterProfessional`.
+**Verificada en celular USB.**
+
+Cuentas demo (mock): `pro.aprobado@lookify.test`, `pro.revision@lookify.test`,
+`pro.rechazado@lookify.test`, `pro.docs-servicios@lookify.test`,
+`pro.docs-certificados@lookify.test` — contraseña `Lookify123`.
+
+Placeholders post-login incluyen **«Cerrar sesión (temporal)»** (`reset` a
+`ProfessionalLogin`) para probar las 5 cuentas sin recargar la app; se reemplazará
+por cierre de sesión real (JWT + limpieza de token).
+
+**Pendiente (a decidir en pantalla 2 Registro):** contexto de sesión y onboarding
+compartido entre pantallas pro; token JWT en `expo-secure-store`. Este turno **no**
+hay contexto ni estado global de sesión (solo params de navegación tras login).
+
+**Backend pendiente (Login Pro):** límite de intentos y bloqueo; JWT y almacenamiento
+seguro (`expo-secure-store`); recuperación de contraseña.
+
+**Contrato de servicios previsto (siguientes pantallas; no implementado aún):**
+
+| Pantalla pro (prov.) | Función servicio | HTTP previsto (TBD) |
+|---------------------|------------------|---------------------|
+| 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — T&C con fecha y versión; devuelve `profesionalId`, `solicitudId`; correo duplicado aquí |
+| 3 Selección servicios | `guardarServicios` | TBD |
+| 4 Certificados | `subirCertificado`, `enviarSolicitudVerificacion` | TBD (multipart) |
+| 5 Estado verificación | `obtenerEstadoVerificacion` | TBD |
+
+Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
+
+`src/services/mock/mockProfessionalAccounts.ts` guarda contraseñas en texto plano
+**solo para demo**; se elimina al conectar autenticación real.
+
 ---
 
 ## 3. Decisiones de arquitectura
+
+### Capa de servicios (App Profesional)
+Las pantallas pro hablan solo con `src/services/` (interfaz + mock + `ServiceError`).
+No importan `mockUsers`, `mockProfessionals` ni seeds directamente. Punto de entrada:
+`getProfessionalAuthService()` (implementación intercambiable). Login Pro ya sigue
+este patrón.
 
 ### Separación de los archivos de datos mock
 `mockProfessionals.ts` modela **profesionales** (incluye `EstadoProfesional`,
@@ -307,14 +365,18 @@ desde Inicio no vuelve al formulario). Todavía no hay botón de cerrar sesión;
 a Login durante las pruebas hay que **recargar la app** (p. ej. menú de desarrollador de
 Expo Go → Reload, o cerrar y reabrir la app).
 
+### App Profesional — navegación (Login)
+- Tipo de cuenta → Continuar como profesional → `ProfessionalLogin` (ya no abre
+  directo `RegisterProfessional`).
+- Login Pro → Registrarme → `RegisterProfessional` (stub); al volver, segmento en Ingresar.
+- Login Pro → ingreso OK → `reset` a placeholder según `estadoSolicitud` / `onboardingPaso`.
+- Placeholders: `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`,
+  `ProfessionalServiceSelectionPlaceholder`, `ProfessionalCertificateUploadPlaceholder`.
+
 ### Registro de profesional
-`RegisterProfessionalScreen.tsx` existe y es alcanzable desde la pantalla 2,
-pero **no forma parte de las 10 pantallas del flujo cliente** y no se ha
-revisado contra ninguna spec. Sigue con el layout viejo (formulario y botón
-dentro de un único `ScrollView`), así que arrastra el problema de espacio vacío
-abajo que ya se corrigió en las demás. El siguiente bloque lo rehace como wizard
-de 4 pasos (Datos personales / Selección de servicios / Carga de certificados /
-Estado de verificación), con filtro C.C./Pasaporte y `validators.ts`.
+`RegisterProfessionalScreen.tsx` es la futura pantalla 2 (Registro). Se alcanza
+desde Login Pro → Registrarme. Sigue con el layout viejo (stub); se reconstruirá
+en su propio turno. **No forma parte del flujo cliente verificado.**
 
 ---
 
