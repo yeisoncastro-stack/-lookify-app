@@ -183,7 +183,7 @@ export default function RegisterProfessionalScreen({ navigation }: Props) {
         index: 0,
         routes: [
           {
-            name: 'ProfessionalServiceSelectionPlaceholder',
+            name: 'ProfessionalServiceSelection',
             params: {
               profesionalId: result.profesionalId,
               solicitudId: result.solicitudId,

@@ -10,6 +10,7 @@ export type OnboardingPaso = 'SERVICIOS' | 'CERTIFICADOS';
 
 export interface SesionProfesional {
   profesionalId: string;
+  solicitudId?: string;
   email: string;
   nombre: string;
   estadoSolicitud: EstadoSolicitudProfesional;
@@ -24,6 +25,7 @@ export type ProfessionalSessionRouteParams = {
   email: string;
   estadoSolicitud: EstadoSolicitudProfesional;
   onboardingPaso?: OnboardingPaso;
+  servicioIds?: string[];
 };
 
 export function sesionToRouteParams(session: SesionProfesional): ProfessionalSessionRouteParams {
@@ -33,6 +35,9 @@ export function sesionToRouteParams(session: SesionProfesional): ProfessionalSes
     email: session.email,
     estadoSolicitud: session.estadoSolicitud,
   };
+  if (session.solicitudId !== undefined) {
+    params.solicitudId = session.solicitudId;
+  }
   if (session.onboardingPaso !== undefined) {
     params.onboardingPaso = session.onboardingPaso;
   }

@@ -21,7 +21,7 @@ import PaymentRatingScreen from '../screens/PaymentRatingScreen';
 import ProfessionalLoginScreen from '../screens/professional/ProfessionalLoginScreen';
 import ProfessionalDashboardPlaceholderScreen from '../screens/professional/placeholders/ProfessionalDashboardPlaceholderScreen';
 import ProfessionalVerificationPlaceholderScreen from '../screens/professional/placeholders/ProfessionalVerificationPlaceholderScreen';
-import ProfessionalServiceSelectionPlaceholderScreen from '../screens/professional/placeholders/ProfessionalServiceSelectionPlaceholderScreen';
+import ProfessionalServiceSelectionScreen from '../screens/professional/ProfessionalServiceSelectionScreen';
 import ProfessionalCertificateUploadPlaceholderScreen from '../screens/professional/placeholders/ProfessionalCertificateUploadPlaceholderScreen';
 import ProfessionalTermsReadScreen from '../screens/professional/ProfessionalTermsReadScreen';
 import ProfessionalPrivacyReadScreen from '../screens/professional/ProfessionalPrivacyReadScreen';
@@ -70,7 +70,7 @@ export type RootStackParamList = {
   ProfessionalLogin: undefined;
   ProfessionalDashboardPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalVerificationPlaceholder: ProfessionalSessionRouteParams;
-  ProfessionalServiceSelectionPlaceholder: ProfessionalSessionRouteParams;
+  ProfessionalServiceSelection: ProfessionalSessionRouteParams;
   ProfessionalCertificateUploadPlaceholder: ProfessionalSessionRouteParams;
   Home: undefined;
   ServiceSelection: { categoriaId: CategoriaId; categoriaNombre: string };
@@ -109,8 +109,8 @@ export default function AppNavigator() {
             component={ProfessionalVerificationPlaceholderScreen}
           />
           <Stack.Screen
-            name="ProfessionalServiceSelectionPlaceholder"
-            component={ProfessionalServiceSelectionPlaceholderScreen}
+            name="ProfessionalServiceSelection"
+            component={ProfessionalServiceSelectionScreen}
           />
           <Stack.Screen
             name="ProfessionalCertificateUploadPlaceholder"

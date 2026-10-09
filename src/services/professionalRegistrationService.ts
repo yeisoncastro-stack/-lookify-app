@@ -1,4 +1,6 @@
 import {
+  GuardarServiciosRequest,
+  GuardarServiciosResponse,
   RegistrarProfesionalRequest,
   RegistrarProfesionalResponse,
 } from '../types/professionalRegistration';
@@ -6,6 +8,7 @@ import { createMockProfessionalRegistrationService } from './mock/mockProfession
 
 export interface ProfessionalRegistrationService {
   registrarProfesional(datos: RegistrarProfesionalRequest): Promise<RegistrarProfesionalResponse>;
+  guardarServicios(input: GuardarServiciosRequest): Promise<GuardarServiciosResponse>;
 }
 
 let implementation: ProfessionalRegistrationService = createMockProfessionalRegistrationService();

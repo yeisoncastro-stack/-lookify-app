@@ -10,7 +10,6 @@ import { ProfessionalSessionRouteParams } from '../../types/professionalAuth';
 type PlaceholderRouteNames =
   | 'ProfessionalDashboardPlaceholder'
   | 'ProfessionalVerificationPlaceholder'
-  | 'ProfessionalServiceSelectionPlaceholder'
   | 'ProfessionalCertificateUploadPlaceholder';
 
 function SessionDetails({ params }: { params: ProfessionalSessionRouteParams }) {
@@ -36,6 +35,12 @@ function SessionDetails({ params }: { params: ProfessionalSessionRouteParams }) 
         <Text style={styles.detailLine}>
           <Text style={styles.detailLabel}>onboardingPaso: </Text>
           {params.onboardingPaso}
+        </Text>
+      ) : null}
+      {params.servicioIds && params.servicioIds.length > 0 ? (
+        <Text style={styles.detailLine}>
+          <Text style={styles.detailLabel}>servicioIds: </Text>
+          {params.servicioIds.join(', ')}
         </Text>
       ) : null}
     </View>

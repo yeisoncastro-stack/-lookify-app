@@ -7,7 +7,7 @@ import {
 export type ProfessionalPostLoginRouteName =
   | 'ProfessionalDashboardPlaceholder'
   | 'ProfessionalVerificationPlaceholder'
-  | 'ProfessionalServiceSelectionPlaceholder'
+  | 'ProfessionalServiceSelection'
   | 'ProfessionalCertificateUploadPlaceholder';
 
 export type ProfessionalPostLoginRoute = {
@@ -28,7 +28,7 @@ export function resolvePostLoginRoute(session: SesionProfesional): ProfessionalP
       if (session.onboardingPaso === 'CERTIFICADOS') {
         return { name: 'ProfessionalCertificateUploadPlaceholder', params };
       }
-      return { name: 'ProfessionalServiceSelectionPlaceholder', params };
+      return { name: 'ProfessionalServiceSelection', params };
     }
     default: {
       const _exhaustive: never = session.estadoSolicitud;

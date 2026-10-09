@@ -150,7 +150,7 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 
 1. Login Profesional — **verificada en celular USB**
 2. Registro — **verificada en celular USB**
-3. Selección de servicios
+3. Selección de servicios — **verificada en celular USB**
 4. Carga de certificados
 5. Estado de verificación
 6. Panel principal (toggle Disponible/Ocupado)
@@ -178,8 +178,9 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 eslogan «Convierte tu talento en ingresos»; tarjeta blanca; segmento
 Ingresar | Registrarme; validación como cliente (`validators.ts`); login vía
 `getProfessionalAuthService()` (mock en `src/services/mock/`). Tras login,
-`resolvePostLoginRoute` + `navigation.reset` a placeholders «sin construir» con
-params de sesión tipados. **Registrarme** navega a `RegisterProfessional`.
+`resolvePostLoginRoute` + `navigation.reset` con params de sesión tipados: pantallas
+ya implementadas (p. ej. `ProfessionalServiceSelection`) o placeholders «sin construir»
+según `estadoSolicitud` / `onboardingPaso`. **Registrarme** navega a `RegisterProfessional`.
 **Verificada en celular USB.**
 
 Cuentas demo (mock): `pro.aprobado@lookify.test`, `pro.revision@lookify.test`,
@@ -195,7 +196,7 @@ incluye `solicitudId` tras registro). **Sin contexto global** por ahora. Pendien
 opcional: contexto de sesión + JWT en `expo-secure-store` (decidir más adelante).
 
 **Pendiente técnico:** `ProfessionalStackNavigator` separado del stack cliente — tarea
-aparté con su propia prueba USB **antes de la pantalla 3** (stacks siguen unificados).
+aparte con su propio commit y prueba USB (el flujo pro sigue en el root stack hasta entonces).
 
 **Backend pendiente (Login Pro):** límite de intentos y bloqueo; JWT y almacenamiento
 seguro (`expo-secure-store`); recuperación de contraseña.
@@ -223,7 +224,7 @@ domicilio y correo para solicitudes de datos personales (en borrador aparecen co
 Registro vía `getProfessionalRegistrationService().registrarProfesional` (mock +
 `mockProfessionalRegistryStore`). Errores: `EMAIL_DUPLICATE`, `DOCUMENTO_DUPLICADO`,
 `NETWORK`. `fechaNacimiento` en payload como **YYYY-MM-DD local** (no `toISOString`).
-Éxito → `reset` a placeholder selección de servicios con `solicitudId`. **Verificada
+Éxito → `reset` a `ProfessionalServiceSelection` con `solicitudId`. **Verificada
 en celular USB.**
 
 **Backend pendiente (Registro):** rate limit; unicidad real de correo/documento;
@@ -231,12 +232,39 @@ política de contraseñas; consentimiento con IP y timestamp servidor.
 
 **Pruebas Jest:** commit aparte cuando las pantallas pro estén verificadas en USB.
 
+### App Profesional — Selección de servicios (pantalla 3)
+
+`ProfessionalServiceSelectionScreen.tsx` en root stack (`ProfessionalServiceSelection`;
+no ruta `ProfessionalServiceSelectionPlaceholder` en navigator). Catálogo vía `getCatalogService()`
+(`listarServiciosPorCategoria`; mock lee `mockServices.ts`). Guardado vía
+`guardarServicios({ solicitudId, servicioIds })` en `ProfessionalRegistrationService`
+(servicios en mapa por `solicitudId` en store mock; cuentas semilla no se mutan).
+Checkboxes multi-categoría; mínimo 1 servicio. Sin `BackHeader`; atrás/gesto → Alert
+«Seguir seleccionando» / «Cerrar sesión» → `reset` Login Pro. Tras guardar → `reset`
+placeholder certificados con `servicioIds` y `onboardingPaso: 'CERTIFICADOS'`.
+Íconos categoría en `src/constants/categoryIcons.ts` (duplicado de Inicio; refactor
+opcional compartir import con `HomeScreen`).
+
+**Backend (pantalla 3):** `GET /api/v1/catalogo/servicios` ·
+`PUT /api/v1/profesionales/solicitudes/:id/servicios` (body `{ servicioIds }`; el
+backend revalida IDs contra el catálogo).
+
+**Pendientes producto/técnicos (no implementados):**
+
+- **(a)** Matching: filtrar por `servicioIds` del profesional, no solo categoría — tarea
+  aparte + prueba USB (no tocar `MatchingScreen` / `mockProfessionals` hasta entonces).
+- **(b)** Editar servicios ofrecidos después del onboarding.
+- **(c)** Pantalla 4: un certificado puede cubrir varios servicios.
+- **(d)** Dónde el profesional ajusta precio ±20 %.
+
+**Verificada en celular USB.**
+
 **Contrato de servicios (resto; no implementado aún):**
 
-| Pantalla pro (prov.) | Función servicio | HTTP previsto (TBD) |
+| Pantalla pro | Función servicio | HTTP previsto (TBD) |
 |---------------------|------------------|---------------------|
-| 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — implementado mock |
-| 3 Selección servicios | `guardarServicios` | TBD |
+| 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — mock |
+| 3 Selección servicios | `listarServiciosPorCategoria`, `guardarServicios` | GET catálogo · PUT solicitudes/:id/servicios — mock |
 | 4 Certificados | `subirCertificado`, `enviarSolicitudVerificacion` | TBD (multipart) |
 | 5 Estado verificación | `obtenerEstadoVerificacion` | TBD |
 
@@ -417,11 +445,13 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Tipo de cuenta → Continuar como profesional → `ProfessionalLogin` (ya no abre
   directo `RegisterProfessional`).
 - Login Pro → Registrarme → `RegisterProfessional`; al volver, segmento en Ingresar.
-- Registro OK → `reset` a `ProfessionalServiceSelectionPlaceholder` con `solicitudId`.
+- Registro OK / login docs-servicios → `ProfessionalServiceSelection` con `solicitudId`.
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead`.
-- Login Pro → ingreso OK → `reset` a placeholder según `estadoSolicitud` / `onboardingPaso`.
+- Login Pro → ingreso OK → `reset` vía `resolvePostLoginRoute` (pantalla implementada o
+  placeholder según `estadoSolicitud` / `onboardingPaso`).
+- Implementada en root stack: `ProfessionalServiceSelection`.
 - Placeholders: `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`,
-  `ProfessionalServiceSelectionPlaceholder`, `ProfessionalCertificateUploadPlaceholder`.
+  `ProfessionalCertificateUploadPlaceholder`.
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:
