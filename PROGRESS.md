@@ -44,9 +44,21 @@ Reglas en `validators.ts` (trim en nombre, documento, nacionalidad, teléfono y
 correo; **sin trim** en contraseñas). Edad mínima 18 años (fecha completa).
 Correo duplicado (incluida la demo): «Este correo ya está registrado». «Crear
 cuenta» deshabilitado hasta formulario válido + términos. Errores tras `onBlur`
-(fecha al elegir/cerrar el selector). Registro exitoso: `registerMockUser` en
-memoria (correo en minúsculas + nombre) y `reset` a Home. Usa
+(fecha al elegir/cerrar el selector). Casilla legal con enlaces a
+`ClientTermsRead` / `ClientPrivacyRead` (textos en `src/constants/legal/*Client*`,
+versión borrador `2026-10-borrador-v1`). Consentimiento mock en `registerMockUser`
+(`consentimiento.terminos` / `politicaDatos` con `version` y `aceptadoEn`
+informativo). Registro exitoso: `reset` a Home. **Ampliación legal: verificada en
+celular USB** (validaciones y flujo sin cambio). Usa
 `@react-native-community/datetimepicker` con `onValueChange` + `onDismiss`.
+
+**Pendiente:** migrar registro y login del **cliente** a servicios tipados (como App
+Pro); hoy sigue `mockUsers.ts`.
+
+**Revisión abogado antes del lanzamiento (cliente):** derecho de retracto; canal de
+peticiones, quejas y reclamos (PQRS); responsabilidad frente al consumidor; si se
+requieren **casillas separadas** para términos y política de datos (hoy una sola
+casilla).
 
 ### 4. Inicio — `src/screens/HomeScreen.tsx`
 Se corrigió el estirado vertical de los chips de categoría, causado por dos
@@ -213,9 +225,6 @@ Registro vía `getProfessionalRegistrationService().registrarProfesional` (mock 
 `NETWORK`. `fechaNacimiento` en payload como **YYYY-MM-DD local** (no `toISOString`).
 Éxito → `reset` a placeholder selección de servicios con `solicitudId`. **Verificada
 en celular USB.**
-
-**Pendiente aparte:** alinear cláusula de intermediario en T&C del **cliente**
-(`RegisterClientScreen` verificado) — no mezclar en el mismo cambio.
 
 **Backend pendiente (Registro):** rate limit; unicidad real de correo/documento;
 política de contraseñas; consentimiento con IP y timestamp servidor.

@@ -1,9 +1,16 @@
 // SOLO DEMO, sin seguridad real. La autenticación real (hash, JWT) se implementa en el backend.
 
+export interface MockUserConsentRecord {
+  terminos: { version: string; aceptadoEn: string };
+  politicaDatos: { version: string; aceptadoEn: string };
+}
+
 export interface MockUser {
   email: string;
   password: string;
   nombre: string;
+  /** Consentimiento mock; en producción lo registra el backend (sello e IP). */
+  consentimiento?: MockUserConsentRecord;
 }
 
 const seed: MockUser[] = [

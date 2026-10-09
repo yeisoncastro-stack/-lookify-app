@@ -4,6 +4,8 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import DateTimePicker, {
   DateTimePickerChangeEvent,
 } from '@react-native-community/datetimepicker';
@@ -24,6 +26,10 @@ import {
   validarTelefono,
   TipoDocumentoId,
 } from '../utils/validators';
+import {
+  CLIENT_DATA_POLICY_VERSION,
+} from '../constants/legal/dataPolicyClientMeta';
+import { CLIENT_TERMS_VERSION } from '../constants/legal/termsClientMeta';
 
 const TIPOS_DOCUMENTO = [
   { id: 'CC' as const, label: 'C.C.' },
@@ -39,12 +45,7 @@ type FieldKey =
   | 'password'
   | 'confirmPassword';
 
-interface RegisterClientScreenProps {
-  navigation: {
-    navigate: (screen: string) => void;
-    reset: (state: { index: number; routes: { name: 'Home' }[] }) => void;
-  };
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'RegisterClient'>;
 
 function formatFecha(date: Date | null): string {
   if (!date) return 'Selecciona tu fecha de nacimiento';
@@ -60,7 +61,7 @@ function correoYaRegistradoError(email: string): string | null {
   return isEmailRegistered(email) ? 'Este correo ya está registrado' : null;
 }
 
-export default function RegisterClientScreen({ navigation }: RegisterClientScreenProps) {
+export default function RegisterClientScreen({ navigation }: Props) {
   const [form, setForm] = useState({
     nombre: '',
     numeroDocumento: '',
@@ -136,10 +137,15 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
 
   const handleSubmit = () => {
     if (!aceptaTerminos || !formValid) return;
+    const aceptadoEn = new Date().toISOString();
     registerMockUser({
       email: form.email,
       password: form.password,
       nombre: form.nombre.trim(),
+      consentimiento: {
+        terminos: { version: CLIENT_TERMS_VERSION, aceptadoEn },
+        politicaDatos: { version: CLIENT_DATA_POLICY_VERSION, aceptadoEn },
+      },
     });
     navigation.reset({
       index: 0,
@@ -277,19 +283,33 @@ export default function RegisterClientScreen({ navigation }: RegisterClientScree
             error={showError('confirmPassword', errors.confirmPassword)}
           />
 
-          <TouchableOpacity
-            style={styles.termsRow}
-            onPress={() => setAceptaTerminos((prev) => !prev)}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.checkbox, aceptaTerminos && styles.checkboxChecked]}>
-              {aceptaTerminos ? <Text style={styles.checkmark}>✓</Text> : null}
-            </View>
+          <View style={styles.termsRow}>
+            <TouchableOpacity
+              style={styles.checkboxTouch}
+              onPress={() => setAceptaTerminos((prev) => !prev)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.checkbox, aceptaTerminos && styles.checkboxChecked]}>
+                {aceptaTerminos ? <Text style={styles.checkmark}>✓</Text> : null}
+              </View>
+            </TouchableOpacity>
             <Text style={styles.termsText}>
-              Acepto los Términos y Condiciones y la Política de tratamiento de datos personales de
-              Lookify
+              Acepto los{' '}
+              <Text
+                style={styles.link}
+                onPress={() => navigation.navigate('ClientTermsRead')}
+              >
+                Términos y Condiciones
+              </Text>{' '}
+              y la{' '}
+              <Text
+                style={styles.link}
+                onPress={() => navigation.navigate('ClientPrivacyRead')}
+              >
+                Política de Tratamiento de Datos Personales (Ley 1581 de 2012)
+              </Text>
             </Text>
-          </TouchableOpacity>
+          </View>
         </ScrollView>
 
         <View style={styles.footer}>
@@ -414,6 +434,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
   },
+  checkboxTouch: {
+    paddingTop: 2,
+  },
   checkbox: {
     width: 22,
     height: 22,
@@ -438,6 +461,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     color: colors.textSecondary,
+  },
+  link: {
+    color: colors.honey,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   footer: {
     paddingHorizontal: spacing.lg,
