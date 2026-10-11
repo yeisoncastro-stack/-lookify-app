@@ -4,8 +4,8 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 6
-(panel principal / toggle Disponible-Ocupado).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 7
+(Mi portafolio).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -155,10 +155,11 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 3. Selección de servicios — **verificada en celular USB**
 4. Carga de certificados — **verificada en celular USB**
 5. Estado de verificación — **verificada en celular USB**
-6. Panel principal (toggle Disponible/Ocupado) — **siguiente en implementación**
-7. Solicitud entrante (ventana de 30 s)
-8. Servicio en curso (ingreso PIN del cliente)
-9. Historial/ingresos (gestión de portafolio)
+6. Panel principal (toggle Disponible/Ocupado) — **verificada en celular USB**
+7. Mi portafolio — **siguiente en implementación**
+8. Solicitud entrante (ventana de 30 s)
+9. Servicio en curso (ingreso PIN del cliente)
+10. Historial/ingresos
 
 ### App Profesional — 10 pantallas oficiales (sin renumerar)
 
@@ -180,9 +181,10 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 eslogan «Convierte tu talento en ingresos»; tarjeta blanca; segmento
 Ingresar | Registrarme; validación como cliente (`validators.ts`); login vía
 `getProfessionalAuthService()` (mock en `src/services/mock/`). Tras login,
-`resolvePostLoginRoute` + `resetProfessionalSession` con params de sesión tipados: pantallas
-ya implementadas (p. ej. `ProfessionalServiceSelection`) o placeholders «sin construir»
-según `estadoSolicitud` / `onboardingPaso`. **Registrarme** navega a `RegisterProfessional`.
+`resolvePostLoginRoute` + `resetProfessionalSession` con params de sesión tipados según
+`estadoSolicitud`, `onboardingPaso` y `profesionalActivado` (onboarding 3–5, panel 6 o
+verificación 5). Placeholder «sin construir»: **`ProfessionalPortfolioPlaceholder`**
+(pantalla 7). **Registrarme** navega a `RegisterProfessional`.
 **Verificada en celular USB.**
 
 Cuentas demo (mock): `pro.aprobado@lookify.test`, `pro.revision@lookify.test`,
@@ -199,10 +201,10 @@ opcional: contexto de sesión + JWT en `expo-secure-store` (decidir más adelant
 
 **Navegación (stack pro):** el root del cliente tiene una sola entrada a la app
 profesional, `ProfessionalApp`, que monta `ProfessionalStackNavigator` (`src/navigation/ProfessionalStackNavigator.tsx`)
-con **8 rutas pro:** `ProfessionalLogin`, `RegisterProfessional`, `ProfessionalTermsRead`,
+con **9 rutas pro:** `ProfessionalLogin`, `RegisterProfessional`, `ProfessionalTermsRead`,
 `ProfessionalPrivacyRead`, `ProfessionalServiceSelection`,
 `ProfessionalCertificateUploadPlaceholder`, `ProfessionalDashboardPlaceholder`,
-`ProfessionalVerificationPlaceholder`. Tipo de cuenta → `navigate('ProfessionalApp')`.
+`ProfessionalPortfolioPlaceholder`, `ProfessionalVerificationPlaceholder`. Tipo de cuenta → `navigate('ProfessionalApp')`.
 Helper `resetProfessionalSession` (`src/navigation/professionalNavigation.ts`): login
 exitoso, registro exitoso, guardar servicios, params inválidos y cerrar sesión hacen
 **reset en el root** a una sola ruta `ProfessionalApp` con el stack anidado en la
@@ -268,7 +270,7 @@ backend revalida IDs contra el catálogo).
 - **(a)** Matching: filtrar por `servicioIds` del profesional, no solo categoría — tarea
   aparte + prueba USB (no tocar `MatchingScreen` / `mockProfessionals` hasta entonces).
 - **(b)** Editar servicios ofrecidos después del onboarding.
-- **(d)** Dónde el profesional ajusta precio ±20 %.
+- **(d)** Ajuste de precio ±20 % por servicio — **pendiente** (después de pantallas pro 8 y 9).
 
 **Verificada en celular USB.**
 
@@ -342,7 +344,44 @@ pantalla 5; activado → Dashboard. Estado/rechazo/activación en mapas por `sol
 **al recargar la app se reinicia**. Navegación: `resetProfessionalSession` (corregir, activar,
 cerrar sesión). **Verificada en celular USB.**
 
-**Backend pendiente (pantalla 5):** ver `docs/contratos-backend-profesional.md` (commit docs aparte).
+**Backend pendiente (pantalla 5):** ver `docs/contratos-backend-profesional.md`.
+
+### App Profesional — Panel principal (pantalla 6)
+
+`ProfessionalDashboardScreen.tsx` registrada bajo la ruta **`ProfessionalDashboardPlaceholder`**
+(deuda de nombre: el identificador sigue diciendo «Placeholder»). Contenido (USB): cabecera
+con foto de perfil («Cambiar foto» galería/cámara, recorte 1:1, JPG/PNG máx. 5 MB, quality 0,7;
+avatar con iniciales si no hay foto), nombre y calificación con **`StarRating`** en modo
+**`readOnly`** (prop opcional; pantalla 10 cliente sin cambios); toggle grande **Disponible /
+Ocupado**; resumen del día con etiqueta **«Datos de ejemplo»**; **Mis calificaciones**
+(promedio, total, últimas 2–3 reseñas; sin estrellas ni «0.0» si no hay reseñas — solo
+«Todavía no tienes reseñas»); **Mis servicios** (precio base + duración, sin ±20 % en este
+commit); botón **Mi portafolio** → `navigate` a **`ProfessionalPortfolioPlaceholder`** (solo
+atrás, sin cerrar sesión); **Cerrar sesión** con confirmación («Seguir aquí / Cerrar sesión»).
+
+Servicio **`getProfessionalDashboardService()`** (mock en memoria por `profesionalId`):
+`obtenerPanelPrincipal`, `cambiarDisponibilidad`, `actualizarFotoPerfil`, `registrarCierreSesion`.
+Pasar a **Disponible** exige **aprobado + activado** en el **servicio** (`PROFESIONAL_NO_HABILITADO`).
+**Ubicación:** `expo-location` — `requestForegroundPermissionsAsync` en UI **antes** de
+`cambiarDisponibilidad`; **no** `getCurrentPosition`; **no** se guardan, muestran ni loguean
+coordenadas (`PUT` ubicación = contrato futuro en docs). Plugin en `app.json` (texto ES):
+solo aplica en **development build**, no en **Expo Go** (igual que image-picker). Si niega
+permiso → permanece **Ocupado**, mensaje + Ajustes. **`registrarCierreSesion`** deja siempre
+**Ocupado** (producción: backend + inactividad/heartbeat). Disponibilidad/foto/reseñas/resumen
+en mapas — **al recargar la app se reinicia**. Atrás/gesto Android: misma alerta que cerrar
+sesión; `navigate` al portafolio **no** dispara `beforeRemove` del panel.
+
+Semilla servicios (mapa, no muta cuentas): **`pro.aprobado`** → `sol-demo-aprobado`
+(**pel-1**, **pel-2**, **maq-1**); **`pro.aprobado-nuevo`** → `sol-demo-aprobado-nuevo`
+(**bar-1**, **bar-2**). Reseñas mock sembradas para ambos `profesionalId`. Tipo
+**`ResenaProfesional`** — deuda: unificar con **`MockResenaDestacada`** del cliente cuando
+exista backend compartido.
+
+**Verificada en celular USB** (toggle permiso ok/denegado, foto galería/cámara, portafolio,
+cierre → Ocupado, regresión StarRating cliente).
+
+**Backend pendiente (pantalla 6):** ver `docs/contratos-backend-profesional.md` (panel, foto,
+disponibilidad, reseñas, ubicación futura).
 
 **Contrato de servicios (resto; HTTP no implementado):**
 
@@ -352,6 +391,7 @@ cerrar sesión). **Verificada en celular USB.**
 | 3 Selección servicios | `listarServiciosPorCategoria`, `guardarServicios` | GET catálogo · PUT solicitudes/:id/servicios — mock |
 | 4 Certificados | `getProfessionalCertificateService()` · ver métodos arriba | GET/POST/PATCH/DELETE certificados · POST enviar-verificacion — **mock** |
 | 5 Estado verificación | `getProfessionalVerificationService()` | GET estado · POST corregir · POST reenviar/validar código — **mock** |
+| 6 Panel principal | `getProfessionalDashboardService()` | GET panel · PATCH disponibilidad · POST foto — **mock** |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
 
@@ -367,8 +407,10 @@ memoria** (registros nuevos del mock); desaparece al conectar el backend real.
 ### Capa de servicios (App Profesional)
 Las pantallas pro hablan solo con `src/services/` (interfaz + mock + `ServiceError`).
 No importan `mockUsers`, `mockProfessionals` ni seeds directamente. Punto de entrada:
-`getProfessionalAuthService()`, `getProfessionalRegistrationService()` (implementación
-intercambiable). Login y registro pro ya siguen este patrón.
+`getProfessionalAuthService()`, `getProfessionalRegistrationService()`,
+`getProfessionalCertificateService()`, `getProfessionalVerificationService()`,
+`getProfessionalDashboardService()` (implementación intercambiable). Login y registro pro
+ya siguen este patrón.
 
 ### Navegación App Profesional (stack separado)
 El `RootStackParamList` del cliente expone solo `ProfessionalApp` hacia el flujo pro.
@@ -542,9 +584,9 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
 - Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` según
   `estadoSolicitud`, `onboardingPaso` y `profesionalActivado`.
-- Stack pro: `ProfessionalServiceSelection`; pantallas 4 y 5 en rutas legacy
-  `ProfessionalCertificateUploadPlaceholder` y `ProfessionalVerificationPlaceholder`;
-  placeholder sin construir: `ProfessionalDashboardPlaceholder`.
+- Stack pro: pantallas 3–6 implementadas; rutas legacy 4–6 (`…UploadPlaceholder`,
+  `…VerificationPlaceholder`, `…DashboardPlaceholder`); placeholder sin construir:
+  `ProfessionalPortfolioPlaceholder` (pantalla 7).
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:

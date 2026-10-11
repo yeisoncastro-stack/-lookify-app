@@ -5,7 +5,8 @@ import ProfessionalLoginScreen from '../screens/professional/ProfessionalLoginSc
 import RegisterProfessionalScreen from '../screens/RegisterProfessionalScreen';
 import ProfessionalTermsReadScreen from '../screens/professional/ProfessionalTermsReadScreen';
 import ProfessionalPrivacyReadScreen from '../screens/professional/ProfessionalPrivacyReadScreen';
-import ProfessionalDashboardPlaceholderScreen from '../screens/professional/placeholders/ProfessionalDashboardPlaceholderScreen';
+import ProfessionalDashboardScreen from '../screens/professional/ProfessionalDashboardScreen';
+import ProfessionalPortfolioPlaceholderScreen from '../screens/professional/placeholders/ProfessionalPortfolioPlaceholderScreen';
 import ProfessionalVerificationScreen from '../screens/professional/ProfessionalVerificationScreen';
 import ProfessionalServiceSelectionScreen from '../screens/professional/ProfessionalServiceSelectionScreen';
 import ProfessionalCertificateUploadScreen from '../screens/professional/ProfessionalCertificateUploadScreen';
@@ -19,6 +20,7 @@ export type ProfessionalStackParamList = {
   ProfessionalServiceSelection: ProfessionalSessionRouteParams;
   ProfessionalCertificateUploadPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalDashboardPlaceholder: ProfessionalSessionRouteParams;
+  ProfessionalPortfolioPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalVerificationPlaceholder: ProfessionalSessionRouteParams;
 };
 
@@ -33,7 +35,11 @@ export default function ProfessionalStackNavigator() {
       <Stack.Screen name="ProfessionalPrivacyRead" component={ProfessionalPrivacyReadScreen} />
       <Stack.Screen
         name="ProfessionalDashboardPlaceholder"
-        component={ProfessionalDashboardPlaceholderScreen}
+        component={ProfessionalDashboardScreen}
+      />
+      <Stack.Screen
+        name="ProfessionalPortfolioPlaceholder"
+        component={ProfessionalPortfolioPlaceholderScreen}
       />
       <Stack.Screen
         name="ProfessionalVerificationPlaceholder"

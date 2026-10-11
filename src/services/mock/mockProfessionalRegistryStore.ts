@@ -36,6 +36,19 @@ if (!serviciosBySolicitudId.has(SOLICITUD_DEMO_DOCS_CERTIFICADOS)) {
   serviciosBySolicitudId.set(SOLICITUD_DEMO_DOCS_CERTIFICADOS, [...SERVICIOS_DEMO_DOCS_CERTIFICADOS]);
 }
 
+/** Demo aprobados: servicios en mapa (peluquería + maquillaje / barbería). */
+const SOLICITUD_DEMO_APROBADO = 'sol-demo-aprobado';
+const SOLICITUD_DEMO_APROBADO_NUEVO = 'sol-demo-aprobado-nuevo';
+const SERVICIOS_DEMO_APROBADO: string[] = ['pel-1', 'pel-2', 'maq-1'];
+const SERVICIOS_DEMO_APROBADO_NUEVO: string[] = ['bar-1', 'bar-2'];
+
+if (!serviciosBySolicitudId.has(SOLICITUD_DEMO_APROBADO)) {
+  serviciosBySolicitudId.set(SOLICITUD_DEMO_APROBADO, [...SERVICIOS_DEMO_APROBADO]);
+}
+if (!serviciosBySolicitudId.has(SOLICITUD_DEMO_APROBADO_NUEVO)) {
+  serviciosBySolicitudId.set(SOLICITUD_DEMO_APROBADO_NUEVO, [...SERVICIOS_DEMO_APROBADO_NUEVO]);
+}
+
 export interface RechazoSolicitudRecord {
   motivo: string;
   serviciosAfectadosIds: string[];

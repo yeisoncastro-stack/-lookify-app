@@ -29,6 +29,12 @@
           "photosPermission": "Lookify necesita acceder a tus fotos para subir certificados.",
           "cameraPermission": "Lookify necesita usar la cámara para fotografiar certificados."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Lookify usa tu ubicación en primer plano para mostrarte como disponible a clientes cercanos."
+        }
       ]
     ]
   }
