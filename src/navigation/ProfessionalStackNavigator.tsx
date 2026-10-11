@@ -8,7 +8,7 @@ import ProfessionalPrivacyReadScreen from '../screens/professional/ProfessionalP
 import ProfessionalDashboardPlaceholderScreen from '../screens/professional/placeholders/ProfessionalDashboardPlaceholderScreen';
 import ProfessionalVerificationPlaceholderScreen from '../screens/professional/placeholders/ProfessionalVerificationPlaceholderScreen';
 import ProfessionalServiceSelectionScreen from '../screens/professional/ProfessionalServiceSelectionScreen';
-import ProfessionalCertificateUploadPlaceholderScreen from '../screens/professional/placeholders/ProfessionalCertificateUploadPlaceholderScreen';
+import ProfessionalCertificateUploadScreen from '../screens/professional/ProfessionalCertificateUploadScreen';
 import { ProfessionalSessionRouteParams } from '../types/professionalAuth';
 
 export type ProfessionalStackParamList = {
@@ -45,7 +45,7 @@ export default function ProfessionalStackNavigator() {
       />
       <Stack.Screen
         name="ProfessionalCertificateUploadPlaceholder"
-        component={ProfessionalCertificateUploadPlaceholderScreen}
+        component={ProfessionalCertificateUploadScreen}
       />
     </Stack.Navigator>
   );

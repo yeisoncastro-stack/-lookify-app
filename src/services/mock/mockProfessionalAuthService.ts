@@ -4,6 +4,7 @@ import { ProfessionalAuthService } from '../professionalAuthService';
 import { MOCK_PROFESSIONAL_ACCOUNTS } from './mockProfessionalAccounts';
 import {
   findRegisteredByEmail,
+  getEstadoSolicitudForSolicitud,
   getOnboardingPasoForSolicitud,
 } from './mockProfessionalRegistryStore';
 
@@ -29,12 +30,14 @@ export function createMockProfessionalAuthService(): ProfessionalAuthService {
           throw new ServiceError('INVALID_CREDENTIALS');
         }
         const onboardingPaso = getOnboardingPasoForSolicitud(registered.solicitudId);
+        const estado =
+          getEstadoSolicitudForSolicitud(registered.solicitudId) ?? registered.estadoSolicitud;
         const session: SesionProfesional = {
           profesionalId: registered.profesionalId,
           solicitudId: registered.solicitudId,
           email: registered.email,
           nombre: registered.nombre,
-          estadoSolicitud: registered.estadoSolicitud,
+          estadoSolicitud: estado,
         };
         if (onboardingPaso !== undefined) {
           session.onboardingPaso = onboardingPaso;
@@ -49,12 +52,14 @@ export function createMockProfessionalAuthService(): ProfessionalAuthService {
       }
 
       const onboardingPaso = getOnboardingPasoForSolicitud(account.solicitudId);
+      const estado =
+        getEstadoSolicitudForSolicitud(account.solicitudId) ?? account.estadoSolicitud;
       const session: SesionProfesional = {
         profesionalId: account.profesionalId,
         solicitudId: account.solicitudId,
         email: account.email,
         nombre: account.nombre,
-        estadoSolicitud: account.estadoSolicitud,
+        estadoSolicitud: estado,
       };
       if (onboardingPaso !== undefined) {
         session.onboardingPaso = onboardingPaso;

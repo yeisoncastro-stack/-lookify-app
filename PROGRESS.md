@@ -4,8 +4,8 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 4
-(carga de certificados).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 5
+(estado de verificación).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -153,8 +153,8 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 1. Login Profesional — **verificada en celular USB**
 2. Registro — **verificada en celular USB**
 3. Selección de servicios — **verificada en celular USB**
-4. Carga de certificados — **siguiente en implementación**
-5. Estado de verificación
+4. Carga de certificados — **verificada en celular USB**
+5. Estado de verificación — **siguiente en implementación**
 6. Panel principal (toggle Disponible/Ocupado)
 7. Solicitud entrante (ventana de 30 s)
 8. Servicio en curso (ingreso PIN del cliente)
@@ -254,7 +254,8 @@ no ruta `ProfessionalServiceSelectionPlaceholder` en navigator). Catálogo vía 
 Checkboxes multi-categoría; mínimo 1 servicio. Sin `BackHeader`; atrás/gesto → Alert
 «Seguir seleccionando» / «Cerrar sesión» → `resetProfessionalSession` → Login Pro
 (`permitirSalida` antes de cada reset). Tras guardar → `resetProfessionalSession`
-al placeholder certificados con `servicioIds` y `onboardingPaso: 'CERTIFICADOS'`.
+a la pantalla 4 (ruta `ProfessionalCertificateUploadPlaceholder`) con `servicioIds` y
+`onboardingPaso: 'CERTIFICADOS'`.
 Íconos categoría en `src/constants/categoryIcons.ts` (duplicado de Inicio; refactor
 opcional compartir import con `HomeScreen`).
 
@@ -267,18 +268,61 @@ backend revalida IDs contra el catálogo).
 - **(a)** Matching: filtrar por `servicioIds` del profesional, no solo categoría — tarea
   aparte + prueba USB (no tocar `MatchingScreen` / `mockProfessionals` hasta entonces).
 - **(b)** Editar servicios ofrecidos después del onboarding.
-- **(c)** Pantalla 4: un certificado puede cubrir varios servicios.
 - **(d)** Dónde el profesional ajusta precio ±20 %.
 
 **Verificada en celular USB.**
 
-**Contrato de servicios (resto; no implementado aún):**
+### App Profesional — Carga de certificados (pantalla 4)
+
+`ProfessionalCertificateUploadScreen.tsx` registrada en el stack pro bajo la ruta
+**`ProfessionalCertificateUploadPlaceholder`** (deuda de nombre: el identificador sigue
+diciendo «Placeholder» hasta un refactor de rutas acordado). Params:
+`ProfessionalSessionRouteParams` con **`servicioIds` opcional**; si faltan, el mock resuelve
+los servicios guardados por `solicitudId` (`obtenerServiciosDeSolicitud`).
+
+Demo **`pro.docs-certificados@lookify.test`:** servicios sembrados en memoria para
+`sol-demo-docs-certificados` (**pel-1**, **bar-2**, **una-1**); las cuentas semilla en
+`mockProfessionalAccounts.ts` **no se mutan**.
+
+Origen de archivo: galería, cámara (`quality` 0,7) o PDF (`expo-image-picker`,
+`expo-document-picker`; tamaño con picker o `expo-file-system`; si el tamaño es
+desconocido → `ARCHIVO_INVALIDO`). Máx. 5 MB; JPG, PNG, PDF. Metadatos: nombre/tipo y
+entidad obligatorios; fecha de emisión opcional. Un certificado cubre ≥1 servicio elegido;
+mín. 1 y máx. **3 certificados por servicio** (un certificado multi-servicio cuenta en
+cada uno). Todo-o-nada al enviar: `SERVICIO_SIN_CERTIFICADO` si falta cobertura.
+
+Servicio **`getProfessionalCertificateService()`** (mock en memoria por `solicitudId`):
+`listarCertificados`, `obtenerServiciosDeSolicitud`, `agregarCertificado`,
+`actualizarCertificado`, `eliminarCertificado`, `enviarSolicitudVerificacion`. Errores:
+`ARCHIVO_INVALIDO`, `ARCHIVO_MUY_GRANDE`, `SERVICIO_SIN_CERTIFICADO`,
+`LIMITE_CERTIFICADOS_SERVICIO`, etc. Tras enviar OK → `estadoSolicitud: EN_REVISION` vía
+**mapa** `estadoSolicitudBySolicitudId` (no muta semillas); **al recargar la app el estado
+mock se reinicia**. Navegación con `resetProfessionalSession` (login, params inválidos,
+cerrar sesión, envío → `ProfessionalVerificationPlaceholder`). Atrás/gesto como pantalla 3;
+modal agregar/editar intercepta el atrás de Android antes que la alerta de cerrar sesión.
+
+**Permisos cámara/galería:** plugin `expo-image-picker` en `app.json` con textos en español;
+en **Expo Go** los mensajes del plugin **no aplican** (solo surten efecto en **development
+build** / binario propio). Sin `console.log` de URIs de certificados.
+
+**Verificada en celular USB** (cobertura mín/máx por servicio, multi-servicio, todo-o-nada,
+límite 5 MB, galería/cámara/PDF, envío a revisión).
+
+**Backend pendiente (pantalla 4; frontend mock listo):**
+
+- `GET /api/v1/profesionales/solicitudes/:id/certificados`
+- `POST /api/v1/profesionales/solicitudes/:id/certificados` (multipart)
+- `PATCH /api/v1/profesionales/solicitudes/:id/certificados/:certificadoId`
+- `DELETE /api/v1/profesionales/solicitudes/:id/certificados/:certificadoId`
+- `POST /api/v1/profesionales/solicitudes/:id/enviar-verificacion`
+
+**Contrato de servicios (resto; HTTP no implementado):**
 
 | Pantalla pro | Función servicio | HTTP previsto (TBD) |
 |---------------------|------------------|---------------------|
 | 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — mock |
 | 3 Selección servicios | `listarServiciosPorCategoria`, `guardarServicios` | GET catálogo · PUT solicitudes/:id/servicios — mock |
-| 4 Certificados | `subirCertificado`, `enviarSolicitudVerificacion` | TBD (multipart) |
+| 4 Certificados | `getProfessionalCertificateService()` · ver métodos arriba | GET/POST/PATCH/DELETE certificados · POST enviar-verificacion — **mock** |
 | 5 Estado verificación | `obtenerEstadoVerificacion` | TBD |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
@@ -302,8 +346,8 @@ intercambiable). Login y registro pro ya siguen este patrón.
 El `RootStackParamList` del cliente expone solo `ProfessionalApp` hacia el flujo pro.
 Las pantallas pro usan `ProfessionalStackParamList` y no importan mocks de datos directamente.
 Cualquier transición que inicia una «sesión nueva» en pro (post-login, post-registro,
-post-guardar servicios, logout, params inválidos) debe usar `resetProfessionalSession`,
-no `navigation.reset` local en el stack anidado.
+post-guardar servicios, post-envío de certificados, logout, params inválidos) debe usar
+`resetProfessionalSession`, no `navigation.reset` local en el stack anidado.
 
 ### Separación de los archivos de datos mock
 `mockProfessionals.ts` modela **profesionales** (incluye `EstadoProfesional`,
@@ -470,9 +514,9 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
 - Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` (pantalla
   implementada o placeholder según `estadoSolicitud` / `onboardingPaso`).
-- Stack pro implementado: `ProfessionalServiceSelection` y placeholders
-  `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`,
-  `ProfessionalCertificateUploadPlaceholder`.
+- Stack pro implementado: `ProfessionalServiceSelection`, pantalla 4 en ruta
+  `ProfessionalCertificateUploadPlaceholder` (nombre legacy), placeholders
+  `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`.
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:

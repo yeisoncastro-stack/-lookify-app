@@ -22,10 +22,19 @@ const registeredBySolicitudId = new Map<string, RegisteredProfessionalRecord>();
 
 const serviciosBySolicitudId = new Map<string, string[]>();
 const onboardingPasoBySolicitudId = new Map<string, OnboardingPaso>();
+const estadoSolicitudBySolicitudId = new Map<string, EstadoSolicitudProfesional>();
+
+/** Demo pro.docs-certificados: servicios sembrados en mapa (no se mutan cuentas semilla). */
+export const SOLICITUD_DEMO_DOCS_CERTIFICADOS = 'sol-demo-docs-certificados';
+const SERVICIOS_DEMO_DOCS_CERTIFICADOS: string[] = ['pel-1', 'bar-2', 'una-1'];
 
 const seedSolicitudIds = new Set<string>(
   MOCK_PROFESSIONAL_ACCOUNTS.map((a) => a.solicitudId)
 );
+
+if (!serviciosBySolicitudId.has(SOLICITUD_DEMO_DOCS_CERTIFICADOS)) {
+  serviciosBySolicitudId.set(SOLICITUD_DEMO_DOCS_CERTIFICADOS, [...SERVICIOS_DEMO_DOCS_CERTIFICADOS]);
+}
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -72,7 +81,47 @@ export function setServiciosForSolicitud(solicitudId: string, servicioIds: strin
 }
 
 export function getServiciosForSolicitud(solicitudId: string): string[] | undefined {
-  return serviciosBySolicitudId.get(solicitudId);
+  const stored = serviciosBySolicitudId.get(solicitudId);
+  if (stored !== undefined) return [...stored];
+  return undefined;
+}
+
+export function getEstadoSolicitudForSolicitud(
+  solicitudId: string
+): EstadoSolicitudProfesional | undefined {
+  const override = estadoSolicitudBySolicitudId.get(solicitudId);
+  if (override !== undefined) return override;
+  const registered = registeredBySolicitudId.get(solicitudId);
+  if (registered) return registered.estadoSolicitud;
+  const seed = MOCK_PROFESSIONAL_ACCOUNTS.find((a) => a.solicitudId === solicitudId);
+  return seed?.estadoSolicitud;
+}
+
+export function setEstadoSolicitudForSolicitud(
+  solicitudId: string,
+  estado: EstadoSolicitudProfesional
+): void {
+  estadoSolicitudBySolicitudId.set(solicitudId, estado);
+}
+
+export function getProfesionalBasicoBySolicitudId(solicitudId: string):
+  | { profesionalId: string; nombre: string; email: string }
+  | undefined {
+  const registered = registeredBySolicitudId.get(solicitudId);
+  if (registered) {
+    return {
+      profesionalId: registered.profesionalId,
+      nombre: registered.nombre,
+      email: registered.email,
+    };
+  }
+  const seed = MOCK_PROFESSIONAL_ACCOUNTS.find((a) => a.solicitudId === solicitudId);
+  if (!seed) return undefined;
+  return {
+    profesionalId: seed.profesionalId,
+    nombre: seed.nombre,
+    email: seed.email,
+  };
 }
 
 export function setOnboardingPasoForSolicitud(solicitudId: string, paso: OnboardingPaso): void {
