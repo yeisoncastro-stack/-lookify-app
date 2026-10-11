@@ -4,11 +4,15 @@ import {
   sesionToRouteParams,
 } from '../types/professionalAuth';
 
-export type ProfessionalPostLoginRouteName =
-  | 'ProfessionalDashboardPlaceholder'
-  | 'ProfessionalVerificationPlaceholder'
-  | 'ProfessionalServiceSelection'
-  | 'ProfessionalCertificateUploadPlaceholder';
+import type { ProfessionalStackParamList } from './ProfessionalStackNavigator';
+
+export type ProfessionalPostLoginRouteName = Exclude<
+  keyof ProfessionalStackParamList,
+  | 'ProfessionalLogin'
+  | 'RegisterProfessional'
+  | 'ProfessionalTermsRead'
+  | 'ProfessionalPrivacyRead'
+>;
 
 export type ProfessionalPostLoginRoute = {
   name: ProfessionalPostLoginRouteName;

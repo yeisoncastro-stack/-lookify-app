@@ -18,14 +18,15 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 import Button from '../../components/Button';
-import { RootStackParamList } from '../../navigation/AppNavigator';
+import { ProfessionalStackParamList } from '../../navigation/ProfessionalStackNavigator';
+import { resetProfessionalSession } from '../../navigation/professionalNavigation';
 import { getCatalogService, CatalogoCategoria } from '../../services/catalogService';
 import { getProfessionalRegistrationService } from '../../services/professionalRegistrationService';
 import { ServiceError } from '../../services/errors';
 import { formatCOP } from '../../utils/pricing';
 import { CATEGORIA_ICONOS } from '../../constants/categoryIcons';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ProfessionalServiceSelection'>;
+type Props = NativeStackScreenProps<ProfessionalStackParamList, 'ProfessionalServiceSelection'>;
 
 function pluralServicios(n: number): string {
   return n === 1 ? '1 servicio seleccionado' : `${n} servicios seleccionados`;
@@ -75,7 +76,7 @@ export default function ProfessionalServiceSelectionScreen({ navigation, route }
   useEffect(() => {
     if (!params.solicitudId) {
       permitirSalida.current = true;
-      navigation.reset({ index: 0, routes: [{ name: 'ProfessionalLogin' }] });
+      resetProfessionalSession(navigation, 'ProfessionalLogin');
       return;
     }
     cargarCatalogo();
@@ -92,7 +93,7 @@ export default function ProfessionalServiceSelectionScreen({ navigation, route }
           style: 'destructive',
           onPress: () => {
             permitirSalida.current = true;
-            navigation.reset({ index: 0, routes: [{ name: 'ProfessionalLogin' }] });
+            resetProfessionalSession(navigation, 'ProfessionalLogin');
           },
         },
       ],
@@ -138,22 +139,14 @@ export default function ProfessionalServiceSelectionScreen({ navigation, route }
         servicioIds: [...selected],
       });
       permitirSalida.current = true;
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'ProfessionalCertificateUploadPlaceholder',
-            params: {
-              profesionalId: params.profesionalId,
-              solicitudId: params.solicitudId,
-              nombre: params.nombre,
-              email: params.email,
-              estadoSolicitud: params.estadoSolicitud,
-              onboardingPaso: result.onboardingPaso,
-              servicioIds: result.servicioIds,
-            },
-          },
-        ],
+      resetProfessionalSession(navigation, 'ProfessionalCertificateUploadPlaceholder', {
+        profesionalId: params.profesionalId,
+        solicitudId: params.solicitudId,
+        nombre: params.nombre,
+        email: params.email,
+        estadoSolicitud: params.estadoSolicitud,
+        onboardingPaso: result.onboardingPaso,
+        servicioIds: result.servicioIds,
       });
     } catch (error) {
       setSaveError(mensajeErrorGuardar(error));

@@ -3,7 +3,9 @@
 **Flujo cliente (pantallas 1 a 10): completo.** Verificado en celular por USB y
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
-pantalla quedó descartado). Entrada pro desde Tipo de cuenta → Login Profesional.
+pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 4
+(carga de certificados).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -151,7 +153,7 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 1. Login Profesional — **verificada en celular USB**
 2. Registro — **verificada en celular USB**
 3. Selección de servicios — **verificada en celular USB**
-4. Carga de certificados
+4. Carga de certificados — **siguiente en implementación**
 5. Estado de verificación
 6. Panel principal (toggle Disponible/Ocupado)
 7. Solicitud entrante (ventana de 30 s)
@@ -178,7 +180,7 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 eslogan «Convierte tu talento en ingresos»; tarjeta blanca; segmento
 Ingresar | Registrarme; validación como cliente (`validators.ts`); login vía
 `getProfessionalAuthService()` (mock en `src/services/mock/`). Tras login,
-`resolvePostLoginRoute` + `navigation.reset` con params de sesión tipados: pantallas
+`resolvePostLoginRoute` + `resetProfessionalSession` con params de sesión tipados: pantallas
 ya implementadas (p. ej. `ProfessionalServiceSelection`) o placeholders «sin construir»
 según `estadoSolicitud` / `onboardingPaso`. **Registrarme** navega a `RegisterProfessional`.
 **Verificada en celular USB.**
@@ -187,16 +189,26 @@ Cuentas demo (mock): `pro.aprobado@lookify.test`, `pro.revision@lookify.test`,
 `pro.rechazado@lookify.test`, `pro.docs-servicios@lookify.test`,
 `pro.docs-certificados@lookify.test` — contraseña `Lookify123`.
 
-Placeholders post-login incluyen **«Cerrar sesión (temporal)»** (`reset` a
-`ProfessionalLogin`) para probar las 5 cuentas sin recargar la app; se reemplazará
+Placeholders post-login incluyen **«Cerrar sesión (temporal)»** (`resetProfessionalSession`
+→ `ProfessionalLogin`) para probar las 5 cuentas sin recargar la app; se reemplazará
 por cierre de sesión real (JWT + limpieza de token).
 
 **Onboarding entre pantallas 3–5:** params tipados (`ProfessionalSessionRouteParams`,
 incluye `solicitudId` tras registro). **Sin contexto global** por ahora. Pendiente
 opcional: contexto de sesión + JWT en `expo-secure-store` (decidir más adelante).
 
-**Pendiente técnico:** `ProfessionalStackNavigator` separado del stack cliente — tarea
-aparte con su propio commit y prueba USB (el flujo pro sigue en el root stack hasta entonces).
+**Navegación (stack pro):** el root del cliente tiene una sola entrada a la app
+profesional, `ProfessionalApp`, que monta `ProfessionalStackNavigator` (`src/navigation/ProfessionalStackNavigator.tsx`)
+con **8 rutas pro:** `ProfessionalLogin`, `RegisterProfessional`, `ProfessionalTermsRead`,
+`ProfessionalPrivacyRead`, `ProfessionalServiceSelection`,
+`ProfessionalCertificateUploadPlaceholder`, `ProfessionalDashboardPlaceholder`,
+`ProfessionalVerificationPlaceholder`. Tipo de cuenta → `navigate('ProfessionalApp')`.
+Helper `resetProfessionalSession` (`src/navigation/professionalNavigation.ts`): login
+exitoso, registro exitoso, guardar servicios, params inválidos y cerrar sesión hacen
+**reset en el root** a una sola ruta `ProfessionalApp` con el stack anidado en la
+pantalla destino, para que el atrás de Android no vuelva al flujo cliente (paridad con
+el root plano anterior). Login Pro: atrás al parent con `canGoBack()` cuando se entró
+desde Tipo de cuenta. **Verificado en celular USB** (refactor stack, sin cambio de UI).
 
 **Backend pendiente (Login Pro):** límite de intentos y bloqueo; JWT y almacenamiento
 seguro (`expo-secure-store`); recuperación de contraseña.
@@ -224,8 +236,8 @@ domicilio y correo para solicitudes de datos personales (en borrador aparecen co
 Registro vía `getProfessionalRegistrationService().registrarProfesional` (mock +
 `mockProfessionalRegistryStore`). Errores: `EMAIL_DUPLICATE`, `DOCUMENTO_DUPLICADO`,
 `NETWORK`. `fechaNacimiento` en payload como **YYYY-MM-DD local** (no `toISOString`).
-Éxito → `reset` a `ProfessionalServiceSelection` con `solicitudId`. **Verificada
-en celular USB.**
+Éxito → `resetProfessionalSession` a `ProfessionalServiceSelection` con `solicitudId`.
+**Verificada en celular USB.**
 
 **Backend pendiente (Registro):** rate limit; unicidad real de correo/documento;
 política de contraseñas; consentimiento con IP y timestamp servidor.
@@ -234,14 +246,15 @@ política de contraseñas; consentimiento con IP y timestamp servidor.
 
 ### App Profesional — Selección de servicios (pantalla 3)
 
-`ProfessionalServiceSelectionScreen.tsx` en root stack (`ProfessionalServiceSelection`;
+`ProfessionalServiceSelectionScreen.tsx` en el stack pro (`ProfessionalServiceSelection`;
 no ruta `ProfessionalServiceSelectionPlaceholder` en navigator). Catálogo vía `getCatalogService()`
 (`listarServiciosPorCategoria`; mock lee `mockServices.ts`). Guardado vía
 `guardarServicios({ solicitudId, servicioIds })` en `ProfessionalRegistrationService`
 (servicios en mapa por `solicitudId` en store mock; cuentas semilla no se mutan).
 Checkboxes multi-categoría; mínimo 1 servicio. Sin `BackHeader`; atrás/gesto → Alert
-«Seguir seleccionando» / «Cerrar sesión» → `reset` Login Pro. Tras guardar → `reset`
-placeholder certificados con `servicioIds` y `onboardingPaso: 'CERTIFICADOS'`.
+«Seguir seleccionando» / «Cerrar sesión» → `resetProfessionalSession` → Login Pro
+(`permitirSalida` antes de cada reset). Tras guardar → `resetProfessionalSession`
+al placeholder certificados con `servicioIds` y `onboardingPaso: 'CERTIFICADOS'`.
 Íconos categoría en `src/constants/categoryIcons.ts` (duplicado de Inicio; refactor
 opcional compartir import con `HomeScreen`).
 
@@ -284,6 +297,13 @@ Las pantallas pro hablan solo con `src/services/` (interfaz + mock + `ServiceErr
 No importan `mockUsers`, `mockProfessionals` ni seeds directamente. Punto de entrada:
 `getProfessionalAuthService()`, `getProfessionalRegistrationService()` (implementación
 intercambiable). Login y registro pro ya siguen este patrón.
+
+### Navegación App Profesional (stack separado)
+El `RootStackParamList` del cliente expone solo `ProfessionalApp` hacia el flujo pro.
+Las pantallas pro usan `ProfessionalStackParamList` y no importan mocks de datos directamente.
+Cualquier transición que inicia una «sesión nueva» en pro (post-login, post-registro,
+post-guardar servicios, logout, params inválidos) debe usar `resetProfessionalSession`,
+no `navigation.reset` local en el stack anidado.
 
 ### Separación de los archivos de datos mock
 `mockProfessionals.ts` modela **profesionales** (incluye `EstadoProfesional`,
@@ -442,15 +462,16 @@ a Login durante las pruebas hay que **recargar la app** (p. ej. menú de desarro
 Expo Go → Reload, o cerrar y reabrir la app).
 
 ### App Profesional — navegación (Login)
-- Tipo de cuenta → Continuar como profesional → `ProfessionalLogin` (ya no abre
-  directo `RegisterProfessional`).
+- Tipo de cuenta → Continuar como profesional → `ProfessionalApp` (stack pro arranca en
+  `ProfessionalLogin`; ya no abre directo `RegisterProfessional`).
 - Login Pro → Registrarme → `RegisterProfessional`; al volver, segmento en Ingresar.
-- Registro OK / login docs-servicios → `ProfessionalServiceSelection` con `solicitudId`.
-- Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead`.
-- Login Pro → ingreso OK → `reset` vía `resolvePostLoginRoute` (pantalla implementada o
-  placeholder según `estadoSolicitud` / `onboardingPaso`).
-- Implementada en root stack: `ProfessionalServiceSelection`.
-- Placeholders: `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`,
+- Registro OK / login docs-servicios → `ProfessionalServiceSelection` con `solicitudId`
+  (vía `resetProfessionalSession`).
+- Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
+- Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` (pantalla
+  implementada o placeholder según `estadoSolicitud` / `onboardingPaso`).
+- Stack pro implementado: `ProfessionalServiceSelection` y placeholders
+  `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`,
   `ProfessionalCertificateUploadPlaceholder`.
 
 ### Registro de profesional
