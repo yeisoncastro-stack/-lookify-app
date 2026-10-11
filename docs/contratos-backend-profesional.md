@@ -1,4 +1,4 @@
-# Contratos backend — App Profesional (pantallas 3–5)
+# Contratos backend — App Profesional (pantallas 3–6)
 
 Documento de referencia para implementación server-side. El frontend mock valida las mismas reglas; el servidor **debe revalidar todo**.
 
@@ -63,3 +63,36 @@ Documento de referencia para implementación server-side. El frontend mock valid
 - Vigencia 10 min; 5 intentos fallidos → bloqueo 15 min; reenvío 60 s, máx. 3.
 - Rate limit por solicitud, cuenta e IP.
 - Auditoría: aprobación, envío código, intentos fallidos, activación exitosa.
+
+## Pantalla 6 — Panel principal
+
+Requisito transversal: endpoints del panel exigen JWT de profesional con **`estadoSolicitud = APROBADO`** y **`activado = true`**. Si no → **403** `PROFESIONAL_NO_HABILITADO` (el servidor **revalida**; no confiar en la UI).
+
+### GET `/api/v1/profesionales/me/panel`
+- **Respuesta 200:** `{ nombre, calificacionPromedio | null, totalResenas, disponibilidad: "DISPONIBLE" | "OCUPADO", resumenDia: { serviciosRealizados, ingresosCop }, serviciosOfrecidos: [{ servicioId, nombre, duracionMin, precioBaseCop }], fotoPerfil: { urlPublica } | null, ultimasResenas: [{ autor, texto, estrellas }] }`.
+- **`calificacionPromedio`:** `null` si `totalResenas === 0`.
+- **Errores:** `401`, `403` `PROFESIONAL_NO_HABILITADO`, `404` si la cuenta no existe.
+
+### PATCH `/api/v1/profesionales/me/disponibilidad`
+- **Body:** `{ "disponibilidad": "DISPONIBLE" | "OCUPADO" }`.
+- **Reglas servidor:** solo **`DISPONIBLE`** si aprobado **y** activado; la app ya pidió permiso de ubicación en primer plano — el backend puede exigir última ubicación reciente vía `PUT .../ubicacion` en una fase posterior. **`OCUPADO`** siempre permitido.
+- **Inactividad / heartbeat:** el servidor debe forzar **`OCUPADO`** tras timeout sin heartbeat (p. ej. cierre de sesión, app en background prolongado, o `PATCH` periódico no recibido). Documentar SLA TBD en ops.
+- **Efecto logout:** al invalidar sesión/JWT → marcar profesional **OCUPADO** (refuerzo del mock `registrarCierreSesion`).
+- **Respuesta 200:** `{ disponibilidad }`.
+- **Errores:** `403` `PROFESIONAL_NO_HABILITADO`, `400` `VALIDATION`.
+
+### POST `/api/v1/profesionales/me/foto-perfil` (multipart)
+- **Campo:** archivo imagen (JPG/PNG).
+- **Validación servidor:** MIME **real** (magic bytes), máx. **5 MB**, recorte cuadrado recomendado en cliente; **rechazar** si no cumple.
+- **Flujo producto:** la foto queda en estado **pendiente de revisión admin**; **no** es visible al cliente en oferta/matching hasta aprobación. Respuesta incluye `estadoFoto: "PENDIENTE_REVISION" | "APROBADA" | "RECHAZADA"` y URL solo si aprobada (o URL privada para el profesional mientras revisa).
+- **Errores:** `400` `ARCHIVO_INVALIDO`, `ARCHIVO_MUY_GRANDE`, `403` `PROFESIONAL_NO_HABILITADO`.
+
+### GET `/api/v1/profesionales/me/resenas?limit=3`
+- **Respuesta 200:** `{ calificacionPromedio, totalResenas, items: [{ autor, texto, estrellas, creadoEn }] }`.
+- **Errores:** `403` `PROFESIONAL_NO_HABILITADO`.
+
+### PUT `/api/v1/profesionales/me/ubicacion` (futuro — matching en vivo)
+- **Body:** `{ "latitude": number, "longitude": number, "accuracyM": number?, "capturedAt": ISO8601 }`.
+- **Uso previsto:** enviar posición cuando el profesional está **DISPONIBLE** (tras permiso en app); rate limit y retención acotada (política de datos).
+- **Nota MVP frontend:** hoy solo se verifica permiso; **no** implementar en app hasta acordar frecuencia y privacidad.
+- **Errores:** `403` si no habilitado o no disponible, `400` `VALIDATION`.
