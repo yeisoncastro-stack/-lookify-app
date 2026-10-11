@@ -24,7 +24,10 @@ export function resolvePostLoginRoute(session: SesionProfesional): ProfessionalP
 
   switch (session.estadoSolicitud) {
     case 'APROBADO':
-      return { name: 'ProfessionalDashboardPlaceholder', params };
+      if (session.profesionalActivado) {
+        return { name: 'ProfessionalDashboardPlaceholder', params };
+      }
+      return { name: 'ProfessionalVerificationPlaceholder', params };
     case 'EN_REVISION':
     case 'RECHAZADO':
       return { name: 'ProfessionalVerificationPlaceholder', params };

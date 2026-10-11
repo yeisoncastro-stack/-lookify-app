@@ -160,9 +160,9 @@ export default function ProfessionalLoginScreen({ navigation }: Props) {
 
             {__DEV__ ? (
               <Text style={styles.devHint}>
-                Demo: pro.aprobado@lookify.test, pro.revision@lookify.test,
-                pro.rechazado@lookify.test, pro.docs-servicios@lookify.test,
-                pro.docs-certificados@lookify.test — contraseña Lookify123
+                Demo: pro.aprobado@lookify.test, pro.aprobado-nuevo@lookify.test,
+                pro.revision@lookify.test, pro.rechazado@lookify.test,
+                pro.docs-servicios@lookify.test, pro.docs-certificados@lookify.test — Lookify123
               </Text>
             ) : null}
           </ScrollView>

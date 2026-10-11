@@ -36,6 +36,23 @@ if (!serviciosBySolicitudId.has(SOLICITUD_DEMO_DOCS_CERTIFICADOS)) {
   serviciosBySolicitudId.set(SOLICITUD_DEMO_DOCS_CERTIFICADOS, [...SERVICIOS_DEMO_DOCS_CERTIFICADOS]);
 }
 
+export interface RechazoSolicitudRecord {
+  motivo: string;
+  serviciosAfectadosIds: string[];
+}
+
+const activadoByProfesionalId = new Map<string, boolean>();
+activadoByProfesionalId.set('pro-demo-aprobado', true);
+
+const rechazoBySolicitudId = new Map<string, RechazoSolicitudRecord>();
+rechazoBySolicitudId.set('sol-demo-rechazado', {
+  motivo:
+    'Las fotos del certificado de barbería no son legibles. Sube nuevamente documentos nítidos.',
+  serviciosAfectadosIds: ['bar-2'],
+});
+
+const avisoCorreccionMotivoBySolicitudId = new Map<string, string>();
+
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -130,4 +147,49 @@ export function setOnboardingPasoForSolicitud(solicitudId: string, paso: Onboard
   if (registered) {
     registeredBySolicitudId.set(solicitudId, { ...registered, onboardingPaso: paso });
   }
+}
+
+export function isProfesionalActivado(profesionalId: string): boolean {
+  return activadoByProfesionalId.get(profesionalId) === true;
+}
+
+export function setProfesionalActivado(profesionalId: string, activado: boolean): void {
+  activadoByProfesionalId.set(profesionalId, activado);
+}
+
+export function getRechazoForSolicitud(
+  solicitudId: string
+): RechazoSolicitudRecord | undefined {
+  const record = rechazoBySolicitudId.get(solicitudId);
+  if (!record) return undefined;
+  return {
+    motivo: record.motivo,
+    serviciosAfectadosIds: [...record.serviciosAfectadosIds],
+  };
+}
+
+export function setRechazoForSolicitud(
+  solicitudId: string,
+  record: RechazoSolicitudRecord
+): void {
+  rechazoBySolicitudId.set(solicitudId, {
+    motivo: record.motivo,
+    serviciosAfectadosIds: [...record.serviciosAfectadosIds],
+  });
+}
+
+export function clearRechazoForSolicitud(solicitudId: string): void {
+  rechazoBySolicitudId.delete(solicitudId);
+}
+
+export function setAvisoCorreccionMotivo(solicitudId: string, motivo: string): void {
+  avisoCorreccionMotivoBySolicitudId.set(solicitudId, motivo);
+}
+
+export function getAvisoCorreccionMotivo(solicitudId: string): string | undefined {
+  return avisoCorreccionMotivoBySolicitudId.get(solicitudId);
+}
+
+export function clearAvisoCorreccionMotivo(solicitudId: string): void {
+  avisoCorreccionMotivoBySolicitudId.delete(solicitudId);
 }

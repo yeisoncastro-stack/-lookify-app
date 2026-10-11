@@ -25,6 +25,14 @@ export const MOCK_PROFESSIONAL_ACCOUNTS: MockProfessionalAccount[] = [
     estadoSolicitud: 'APROBADO',
   },
   {
+    email: 'pro.aprobado-nuevo@lookify.test',
+    password: 'Lookify123',
+    profesionalId: 'pro-demo-aprobado-nuevo',
+    solicitudId: 'sol-demo-aprobado-nuevo',
+    nombre: 'Profesional Aprobado sin activar (demo)',
+    estadoSolicitud: 'APROBADO',
+  },
+  {
     email: 'pro.revision@lookify.test',
     password: 'Lookify123',
     profesionalId: 'pro-demo-revision',

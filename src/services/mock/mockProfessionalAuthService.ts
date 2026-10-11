@@ -6,6 +6,7 @@ import {
   findRegisteredByEmail,
   getEstadoSolicitudForSolicitud,
   getOnboardingPasoForSolicitud,
+  isProfesionalActivado,
 } from './mockProfessionalRegistryStore';
 
 const MOCK_PRO_AUTH_LATENCY_MS = 600;
@@ -42,6 +43,7 @@ export function createMockProfessionalAuthService(): ProfessionalAuthService {
         if (onboardingPaso !== undefined) {
           session.onboardingPaso = onboardingPaso;
         }
+        session.profesionalActivado = isProfesionalActivado(registered.profesionalId);
         return session;
       }
 
@@ -66,6 +68,7 @@ export function createMockProfessionalAuthService(): ProfessionalAuthService {
       } else if (account.onboardingPaso !== undefined) {
         session.onboardingPaso = account.onboardingPaso;
       }
+      session.profesionalActivado = isProfesionalActivado(account.profesionalId);
       return session;
     },
   };

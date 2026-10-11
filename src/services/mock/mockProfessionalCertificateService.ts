@@ -22,11 +22,14 @@ import {
 } from '../../utils/certificateCoverage';
 import { esServicioIdValido } from './catalogServicioIds';
 import {
+  clearAvisoCorreccionMotivo,
+  clearRechazoForSolicitud,
   getProfesionalBasicoBySolicitudId,
   getServiciosForSolicitud,
   setEstadoSolicitudForSolicitud,
   solicitudExiste,
 } from './mockProfessionalRegistryStore';
+import { clearActivacionForSolicitud } from './mockProfessionalActivationStore';
 import { ServiceError } from '../errors';
 import { ProfessionalCertificateService } from '../professionalCertificateService';
 import {
@@ -45,6 +48,10 @@ function delay(ms: number): Promise<void> {
 
 function generateCertId(): string {
   return `cert-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function mockContarCertificados(solicitudId: string): number {
+  return getLista(solicitudId).length;
 }
 
 function getLista(solicitudId: string): CertificadoProfesional[] {
@@ -235,6 +242,9 @@ export function createMockProfessionalCertificateService(): ProfessionalCertific
       if (faltantes.length > 0 || !coberturaCompleta(counts)) {
         throw new ServiceError('SERVICIO_SIN_CERTIFICADO');
       }
+      clearRechazoForSolicitud(input.solicitudId);
+      clearAvisoCorreccionMotivo(input.solicitudId);
+      clearActivacionForSolicitud(input.solicitudId);
       setEstadoSolicitudForSolicitud(input.solicitudId, 'EN_REVISION');
       const basico = getProfesionalBasicoBySolicitudId(input.solicitudId);
       if (!basico) {

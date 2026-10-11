@@ -15,6 +15,8 @@ export interface SesionProfesional {
   nombre: string;
   estadoSolicitud: EstadoSolicitudProfesional;
   onboardingPaso?: OnboardingPaso;
+  /** false hasta activar cuenta tras aprobación (mock/backend). */
+  profesionalActivado?: boolean;
 }
 
 /** Params tipados para placeholders post-login (sin contexto global en este turno). */

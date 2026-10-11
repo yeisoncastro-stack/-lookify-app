@@ -30,6 +30,7 @@ import { ProfessionalStackParamList } from '../../navigation/ProfessionalStackNa
 import { resetProfessionalSession } from '../../navigation/professionalNavigation';
 import { getCatalogService } from '../../services/catalogService';
 import { getProfessionalCertificateService } from '../../services/professionalCertificateService';
+import { getProfessionalVerificationService } from '../../services/professionalVerificationService';
 import { ServiceError } from '../../services/errors';
 import { CertificadoArchivoDescriptor, CertificadoProfesional } from '../../types/professionalCertificates';
 import {
@@ -116,6 +117,7 @@ export default function ProfessionalCertificateUploadScreen({ navigation, route 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [motivoRechazoAviso, setMotivoRechazoAviso] = useState<string | null>(null);
 
   const counts = useMemo(
     () => contarCertificadosPorServicio(certificados, servicioIds),
@@ -199,10 +201,14 @@ export default function ProfessionalCertificateUploadScreen({ navigation, route 
         return;
       }
       setServicioIds(ids);
-      const [certs, catalogo] = await Promise.all([
+      const [certs, catalogo, aviso] = await Promise.all([
         certService.listarCertificados({ solicitudId: params.solicitudId }),
         getCatalogService().listarServiciosPorCategoria(),
+        getProfessionalVerificationService().obtenerAvisoCorreccion({
+          solicitudId: params.solicitudId,
+        }),
       ]);
+      setMotivoRechazoAviso(aviso.motivoRechazo);
       setCertificados(certs);
       const info: ServicioInfo[] = [];
       for (const cat of catalogo) {
@@ -510,6 +516,12 @@ export default function ProfessionalCertificateUploadScreen({ navigation, route 
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
+              {motivoRechazoAviso ? (
+                <View style={styles.avisoRechazo}>
+                  <Text style={styles.avisoRechazoTitle}>Motivo del rechazo anterior</Text>
+                  <Text style={styles.avisoRechazoText}>{motivoRechazoAviso}</Text>
+                </View>
+              ) : null}
               <Text style={styles.sectionLabel}>Cobertura por servicio</Text>
               {serviciosInfo.map((s) => {
                 const n = counts[s.id] ?? 0;
@@ -740,6 +752,16 @@ const styles = StyleSheet.create({
   retryButton: { minWidth: 160 },
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.lg, paddingBottom: spacing.xl },
+  avisoRechazo: {
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.honey,
+  },
+  avisoRechazoTitle: { fontSize: 13, fontWeight: '600', color: colors.navy, marginBottom: spacing.xs },
+  avisoRechazoText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.navy, marginBottom: spacing.sm },
   sectionLabelSpaced: { marginTop: spacing.lg },
   coverageRow: {

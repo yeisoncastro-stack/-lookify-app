@@ -4,8 +4,8 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 5
-(estado de verificación).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 6
+(panel principal / toggle Disponible-Ocupado).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -154,8 +154,8 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 2. Registro — **verificada en celular USB**
 3. Selección de servicios — **verificada en celular USB**
 4. Carga de certificados — **verificada en celular USB**
-5. Estado de verificación — **siguiente en implementación**
-6. Panel principal (toggle Disponible/Ocupado)
+5. Estado de verificación — **verificada en celular USB**
+6. Panel principal (toggle Disponible/Ocupado) — **siguiente en implementación**
 7. Solicitud entrante (ventana de 30 s)
 8. Servicio en curso (ingreso PIN del cliente)
 9. Historial/ingresos (gestión de portafolio)
@@ -316,6 +316,34 @@ límite 5 MB, galería/cámara/PDF, envío a revisión).
 - `DELETE /api/v1/profesionales/solicitudes/:id/certificados/:certificadoId`
 - `POST /api/v1/profesionales/solicitudes/:id/enviar-verificacion`
 
+### App Profesional — Estado de verificación (pantalla 5)
+
+`ProfessionalVerificationScreen.tsx` bajo la ruta **`ProfessionalVerificationPlaceholder`**
+(deuda de nombre, igual que pantalla 4). Estados UI: **EN_REVISION** (resumen enviado +
+«Actualizar estado»), **RECHAZADO** (motivo + servicios afectados + «Corregir certificados»
+→ pantalla 4 con certificados intactos), **APROBADO sin activar** (código de activación;
+no reemplaza la contraseña), **APROBADO activado** → login va directo al Dashboard
+(`pro.aprobado@lookify.test`; mapa `activadoByProfesionalId`, no muta semillas).
+
+Activación: **6 dígitos**, vigencia **10 min**, **5** intentos fallidos → bloqueo **15 min**,
+reenvío cada **60 s**, máx. **3** reenvíos (solo `reenviarCodigoActivacion` en app; el
+primer código lo genera la simulación admin `__DEV__` o la **primera** `obtenerEstadoVerificacion`
+— simula correo del servidor). Límites en `src/constants/professionalActivation.ts`.
+Validación en servicio; `emailEnmascarado` viene ya enmascarado del mock/backend.
+Sin salida: reenvíos agotados + código expirado → mensaje soporte con marcadores.
+
+Servicio **`getProfessionalVerificationService()`** (mock en memoria): `obtenerEstadoVerificacion`,
+`actualizarEstadoVerificacion`, `iniciarCorreccionCertificados`, `reenviarCodigoActivacion`,
+`validarCodigoActivacion`, `obtenerAvisoCorreccion` (banner en pantalla 4 al corregir),
+`simularDecisionAdministrador` / `expirarCodigoActivacionDemo` (**solo `__DEV__`**; panel
+DEMO en pantalla; `OPERACION_NO_PERMITIDA` si no es dev). Cuenta demo nueva:
+**`pro.aprobado-nuevo@lookify.test`**. `resolvePostLoginRoute`: `APROBADO` + no activado →
+pantalla 5; activado → Dashboard. Estado/rechazo/activación en mapas por `solicitudId` —
+**al recargar la app se reinicia**. Navegación: `resetProfessionalSession` (corregir, activar,
+cerrar sesión). **Verificada en celular USB.**
+
+**Backend pendiente (pantalla 5):** ver `docs/contratos-backend-profesional.md` (commit docs aparte).
+
 **Contrato de servicios (resto; HTTP no implementado):**
 
 | Pantalla pro | Función servicio | HTTP previsto (TBD) |
@@ -323,7 +351,7 @@ límite 5 MB, galería/cámara/PDF, envío a revisión).
 | 2 Registro | `registrarProfesional` | `POST /api/v1/auth/register/professional` — mock |
 | 3 Selección servicios | `listarServiciosPorCategoria`, `guardarServicios` | GET catálogo · PUT solicitudes/:id/servicios — mock |
 | 4 Certificados | `getProfessionalCertificateService()` · ver métodos arriba | GET/POST/PATCH/DELETE certificados · POST enviar-verificacion — **mock** |
-| 5 Estado verificación | `obtenerEstadoVerificacion` | TBD |
+| 5 Estado verificación | `getProfessionalVerificationService()` | GET estado · POST corregir · POST reenviar/validar código — **mock** |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
 
@@ -512,11 +540,11 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Registro OK / login docs-servicios → `ProfessionalServiceSelection` con `solicitudId`
   (vía `resetProfessionalSession`).
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
-- Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` (pantalla
-  implementada o placeholder según `estadoSolicitud` / `onboardingPaso`).
-- Stack pro implementado: `ProfessionalServiceSelection`, pantalla 4 en ruta
-  `ProfessionalCertificateUploadPlaceholder` (nombre legacy), placeholders
-  `ProfessionalDashboardPlaceholder`, `ProfessionalVerificationPlaceholder`.
+- Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` según
+  `estadoSolicitud`, `onboardingPaso` y `profesionalActivado`.
+- Stack pro: `ProfessionalServiceSelection`; pantallas 4 y 5 en rutas legacy
+  `ProfessionalCertificateUploadPlaceholder` y `ProfessionalVerificationPlaceholder`;
+  placeholder sin construir: `ProfessionalDashboardPlaceholder`.
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:
