@@ -332,3 +332,87 @@ celular no es fuente de verdad.
   se registra la comisión queda abierto).
 - Si el profesional debe poder reportar un problema durante **INICIADO** (hoy no hay salida ni
   cancelación en esa etapa).
+
+### Registro en historial (efecto de finalizar / cancelar pro)
+
+Al **finalizar** o **cancelar por profesional** (pantalla 9), el backend debe **crear o reconocer**
+un ítem de historial **idempotente** por `servicioId` / `solicitudEntranteId`. La pantalla 10 **solo
+lee**; no expone un endpoint de «registrar» al profesional.
+
+- **Finalizado:** `estado = FINALIZADO`, montos con comisión y neto (ver pantalla 10), `cerradoEn =
+  finalizadoEn`, método de pago real del servicio.
+- **Cancelado por profesional:** `estado = CANCELADO`, montos en **0**, `motivoCancelacion` de la
+  lista cerrada, `cerradoEn = canceladoEn`.
+- **Cancelaciones del cliente tras aceptar:** hoy **no** entran al historial del profesional;
+  definir regla de negocio y contadores.
+
+## Pantalla 10 — Historial / ingresos
+
+Requisito transversal: mismo JWT (**aprobado + activado**). Ruta frontend
+**`ProfessionalEarningsHistory`**. Entrada desde el panel (**«Mis ingresos»**); compatible con
+servicio en curso activo.
+
+Cada respuesta incluye **`ahoraServidor`** (ISO8601). Límites de **Hoy / Semana / Mes** se calculan
+en **hora Bogotá (UTC−5 fijo)**, no con la zona del dispositivo. **Semana:** lunes 00:00:00 a
+domingo 23:59:59 (inclusive) en calendario Bogotá.
+
+### Comisión e ingresos (reglas de negocio)
+
+- Comisión Lookify: **15 % solo sobre `precioBaseCop`**, redondeo al **entero** más cercano en COP:
+  `round((precioBaseCop * 15) / 100)`.
+- **Domicilio:** 100 % del profesional (no entra en la base de comisión).
+- **`precioTotalCop = precioBaseCop + precioDomicilioCop`**.
+- **Neto profesional = `precioTotalCop − comisión`** (solo servicios finalizados).
+- **Ajuste ±20 %** sobre precio base: **aplazado** (no implementado en frontend).
+- En **efectivo**, la UI muestra comisión **informativa** («Debes a Lookify» por servicio; total de
+  comisión en efectivo en el resumen). **Sin** saldo global, cobro automático, bloqueo de cuenta ni
+  botón de pago en esta fase — **regla de cobro del efectivo pendiente** en backend/finanzas.
+- **Digital:** **pago al profesional** de lo cobrado (neto) — timing, retenciones y pasarela **TBD**.
+
+### GET `/api/v1/profesionales/me/ingresos/resumen`
+
+- **Query:** `periodo=HOY|SEMANA|MES`.
+- **Respuesta 200:** `{ resumen: ResumenPeriodoHistorial, ahoraServidor }`.
+- **`ResumenPeriodoHistorial`:** `periodo`, `cantidadFinalizados`, `cantidadCancelados`, `totalCop`,
+  `comisionCop`, `netoCop`, `comisionEfectivoCop` (suma de comisiones de finalizados pagados en
+  efectivo). Los **cancelados solo incrementan `cantidadCancelados`**; no suman dinero.
+- **Errores:** `400` `PERIODO_INVALIDO`, `403` `PROFESIONAL_NO_HABILITADO`.
+
+### GET `/api/v1/profesionales/me/ingresos/historial`
+
+- **Query:** `periodo=HOY|SEMANA|MES`, `cursor` opcional, `limit` (default 20, max 50).
+- **Respuesta 200:** `{ items: HistorialIngresosItem[], nextCursor, ahoraServidor }`.
+- **`HistorialIngresosItem`:** `id`, `servicioNombre`, `clientePrimerNombre`, `metodoPago`
+  (`EFECTIVO`|`DIGITAL`), `estado` (`FINALIZADO`|`CANCELADO`), montos (`precioTotalCop`, `comisionCop`,
+  `netoCop`; **0** si cancelado), `cerradoEn` (ISO8601), `motivoCancelacion` (solo cancelados pro).
+  **Sin** PII extra (dirección, correo, teléfono, documento).
+- **Orden:** `cerradoEn` descendente; desempate estable por `id`.
+- **Cursor:** opaco; formato interno sugerido `` `${cerradoEnMs}:${id}` ``; **`400` `CURSOR_INVALIDO`**
+  si no corresponde al periodo o está caducado.
+- **Errores:** `400` `PERIODO_INVALIDO` | `CURSOR_INVALIDO`, `403` `PROFESIONAL_NO_HABILITADO`.
+
+### Panel — resumen del día
+
+- El **GET panel principal** debe incluir **`resumenDia`** coherente con **`periodo=HOY`** del
+  historial (`serviciosRealizados` = finalizados de hoy; `ingresosCop` = neto de hoy). No duplicar
+  fuentes de verdad.
+
+### Método de pago
+
+- En producción: método real registrado al cerrar el servicio (pasarela / efectivo confirmado).
+- Mock actual alterna Efectivo/Digital por hash del `id` **solo para demo** — no replicar en backend.
+
+### Seguridad y privacidad
+
+- Historial acotado al **`profesionalId`** del JWT.
+- Rate limit en listados y resúmenes por cuenta.
+- Ítems **inmutables** tras cierre; correcciones vía procesos admin/ajustes, no PATCH al profesional.
+
+### Decisiones pendientes (pantalla 10)
+
+- **±20 %** en precio base al ofertar/ejecutar.
+- **Cobro** de comisión en servicios **efectivo** (liquidación, plazos, recordatorios).
+- **Liquidación** al profesional de cobros **digitales**.
+- **Cancelaciones del cliente** después de aceptación mutua: visibilidad en historial, métricas y
+  posible impacto en rating/disponibilidad.
+- Unificar **semilla/demo** (`origenSemilla`) solo entornos no productivos.

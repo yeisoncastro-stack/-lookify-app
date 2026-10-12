@@ -4,12 +4,12 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 10
-(Historial/ingresos).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** siguiente pantalla
+pro (por definir en producto).
 
-**Commits recientes:** `31a2da9` — feat(pro) pantalla 9 servicio en curso (`main`) ·
-`3c5cc99` — docs(pro) contrato pantalla 8 (`main`) · `08c217c` — feat(pro) pantalla 8
-solicitud entrante (`main`).
+**Commits recientes:** `7db63d8` — feat(pro) pantalla 10 historial de ingresos (`main`) ·
+`31a2da9` — feat(pro) pantalla 9 servicio en curso (`main`) · `3c5cc99` — docs(pro) contrato
+pantalla 8 (`main`).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -477,8 +477,8 @@ Estado de ruta para deduplicar aperturas: **`professionalSessionFromState.ts`** 
   el flujo normal (panel → solicitud → cliente acepta). Opcional futuro: DEMO en portafolio solo para
   repetir la prueba 9.
 - **(b)** Listener usa **polling** de disponibilidad; backend → evento push/WebSocket.
-- **(c)** La comisión del 15 % sigue oculta al profesional; con la pantalla 10 se decide si se le
-  muestra. El ajuste de precio ±20 % también se resuelve con la pantalla 10.
+- **(c)** La comisión del **15 %** (solo sobre precio base) ya se **muestra** en la pantalla 10.
+  El ajuste de precio **±20 %** sigue **aplazado**.
 - **(d)** La pantalla 9 real ya está montada en **`ProfessionalServiceInProgressPlaceholder`**; el sufijo Placeholder de la ruta sigue como deuda de nombre.
 - **(e)** La solicitud solo llega con la **app abierta**; **notificaciones push** en fase backend.
 
@@ -533,11 +533,75 @@ semilla; **se pierde al recargar** la app.
   cliente y profesional.
 - La flecha del encabezado abre la misma alerta que el botón de Android.
 - La ruta conserva el nombre **Placeholder**.
-- Comisión del **15 %** y ajuste **±20 %** se resuelven con la pantalla 10.
+- Comisión del **15 %** visible en pantalla 10; ajuste **±20 %** aplazado.
 - **Reapertura:** el contrato exige que `resolvePostLoginRoute` abra esta pantalla si hay servicio
   activo. Hoy el login sigue al panel y el mock se pierde al recargar.
+- Al **finalizar** o **cancelar por profesional**, el mock registra el ítem en el **historial de
+  ingresos** (idempotente por `servicio.id`).
 
 **Backend pendiente (pantalla 9):** ver `docs/contratos-backend-profesional.md`.
+
+### App Profesional — Historial / ingresos (pantalla 10)
+
+`ProfessionalEarningsHistoryScreen.tsx` en la ruta **`ProfessionalEarningsHistory`** (sin sufijo
+Placeholder). Entrada: botón **«Mis ingresos»** en el panel (funciona **con servicio activo**; no se
+deshabilita). Atrás: **`goBack`** al panel (Android incluido); no hace `resetProfessionalSession`
+salvo sesión inválida.
+
+**Filtros:** chips **Hoy / Semana / Mes** (altura mínima 44, accesibilidad). Límites de periodo con
+**UTC−5 fijo** sobre **`ahoraServidor`** (`src/utils/bogotaTime.ts`; sin `Intl` ni zona del celular).
+**Semana:** lunes 00:00 a domingo 23:59:59 (calendario Bogotá).
+
+**Resumen del periodo:** cantidad de **finalizados** y **cancelados** por separado; los cancelados
+**solo cuentan**, no suman en total, comisión, neto ni comisión por efectivo. Montos del resumen solo
+de **FINALIZADOS**: total cobrado, comisión Lookify, neto y línea **«Comisión por servicios en
+efectivo»** (informativa; sin saldo global, cobro, bloqueo ni botón pagar).
+
+**Comisión (mock):** **15 % solo sobre `precioBaseCop`**, redondeo al entero más cercano en pesos:
+`Math.round((precioBaseCop * 15) / 100)` en `earningsMontos.ts`. Domicilio 100 % del profesional.
+**Neto = precioTotalCop − comisión.** La pantalla **no** importa mocks ni recalcula comisión/neto.
+
+**Lista:** ítems orden **descendente** por fecha de cierre, **20** por página, cursor
+`` `cerradoEnMs:id` ``. Estados: carga, vacío, error con **Reintentar**, error de página siguiente,
+**pull-to-refresh** (conserva filtro), recarga al **recuperar foco**. **Guard** por contador de
+consulta (cambio rápido de filtro / recarga) y guard anti-doble en **cargar más**.
+
+**Filas:** servicio, primer nombre del cliente, fecha/hora Bogotá, método de pago. **Finalizado:**
+total, comisión, neto; en **efectivo**, nota **«Debes a Lookify: $X»** (X = comisión). **Cancelado**
+(solo cancelación **del profesional**): etiqueta Cancelado + motivo (lista cerrada), montos **$0** sin
+total tachado. Sin dirección, correo, teléfono ni documento.
+
+**Resumen del día (panel):** lee el mismo store vía **`resumenHoyParaPanel`** (periodo HOY: servicios
+finalizados e ingresos = neto). Etiqueta **«Datos de ejemplo»** solo en **`__DEV__`** y solo si el
+resumen de hoy proviene **únicamente** de ítems de semilla.
+
+**Registro en historial:** en el **mock de servicio en curso**, dentro de la misma operación de
+**finalizar** o **cancelar por profesional**, idempotente por **`servicio.id`**. La pantalla 10 **no**
+llama a registrar. Ítems **inmutables** tras registrarse.
+
+**Semilla demo:** `sembrarHistorialDemo` solo **`__DEV__`**, solo si el store está **vacío**, ítems con
+**`origenSemilla`**. Fuera de dev → **`OPERACION_NO_PERMITIDA`**. Se invoca al **primer cargue** de
+**Mis ingresos** (no al abrir solo el panel). No mezcla ni borra servicios reales de la sesión.
+
+**Servicio:** `getProfessionalEarningsHistoryService()` — `obtenerResumenPeriodo`, `listarHistorial`,
+`sembrarHistorialDemo` (solo dev). Errores: **`PERIODO_INVALIDO`**, **`CURSOR_INVALIDO`**, más
+**`PROFESIONAL_NO_HABILITADO`**, **`VALIDATION`**, **`NETWORK`**.
+
+**Mock método de pago** en ítems de sesión: alternancia **determinista** por `id` (suma de
+`charCodeAt`; par → Efectivo, impar → Digital).
+
+**Verificada en celular USB** (12 pruebas).
+
+**Deudas / follow-ups (pantalla 10):**
+- **`RESUMEN_DIA_MOCK` / `datosMock`** siguen en `mockProfessionalDashboardStore` sin uso (limpieza
+  cosmética).
+- Badge **«Datos de ejemplo»** en historial si **hay alguna** semilla en el periodo; en el panel exige
+  que **todos** los de hoy sean semilla.
+- **Cancelaciones del cliente tras aceptar:** no entran al historial (pendiente backend/producto).
+- Ajuste **±20 %**, cobro real de comisión en efectivo, pago al profesional del digital y método de
+  pago real en producción: ver contrato backend.
+
+**Backend pendiente (pantalla 10):** ver `docs/contratos-backend-profesional.md`.
 
 **Contrato de servicios (resto; HTTP no implementado):**
 
@@ -551,6 +615,7 @@ semilla; **se pierde al recargar** la app.
 | 7 Mi portafolio | `getProfessionalPortfolioService()` | GET/POST/PATCH/DELETE portafolio · POST portada/reorden — **mock** |
 | 8 Solicitud entrante | `getProfessionalIncomingRequestService()` | WebSocket/push + GET activa · POST aceptar/rechazar — **mock** |
 | 9 Servicio en curso | `getProfessionalServiceInProgressService()` | GET servicio-activo · POST llegada/validar-pin/cancelar/finalizar — **mock** |
+| 10 Historial / ingresos | `getProfessionalEarningsHistoryService()` | GET resumen-periodo · GET historial (cursor) — **mock**; registro al finalizar/cancelar en pantalla 9 |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
 
