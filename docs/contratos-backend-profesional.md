@@ -1,4 +1,4 @@
-# Contratos backend — App Profesional (pantallas 3–8)
+# Contratos backend — App Profesional (pantallas 3–9)
 
 Documento de referencia para implementación server-side. El frontend mock valida las mismas reglas; el servidor **debe revalidar todo**.
 
@@ -237,3 +237,98 @@ Payload (**`SolicitudEntrante`**, cuerpo compartido push/WebSocket):
   cliente — `profesionalId`, `solicitudId`, timestamps servidor, resultado (`ACEPTADA` / `RECHAZADA` /
   `EXPIRADA` / `YA_ASIGNADA`), IP/dispositivo cuando aplique.
 - Rate limit en aceptar/rechazar por solicitud y por cuenta.
+
+## Pantalla 9 — Servicio en curso
+
+Requisito transversal: mismo JWT que el panel (**aprobado + activado**). El servicio en curso existe
+solo después de que **el profesional aceptó y el cliente confirmó**. **Una sola** operación activa
+por profesional. La **dirección exacta** del cliente viaja **solo a partir de ese momento** (no en
+la solicitud entrante).
+
+Cada respuesta de esta sección incluye **`ahoraServidor`** (ISO8601 del servidor). La app calcula el
+desfase una vez por consulta y lo usa para el cronómetro y la cuenta del bloqueo. El reloj del
+celular no es fuente de verdad.
+
+### GET `/api/v1/profesionales/me/servicio-activo`
+
+- **Uso:** pantalla en curso y recuperación al volver a primer plano. También al **login o reapertura**:
+  si hay servicio en `EN_CAMINO`, `LLEGUE` o `INICIADO`, `resolvePostLoginRoute` debe abrir esta
+  pantalla (ruta frontend `ProfessionalServiceInProgressPlaceholder`).
+- **Respuesta 200:** `{ servicio: ServicioEnCurso | null, ahoraServidor }`. `null` si no hay activo
+  (finalizado o cancelado no cuenta como activo).
+- **`ServicioEnCurso`:** `id`, `etapa` (`EN_CAMINO` | `LLEGUE` | `INICIADO` | `FINALIZADO` |
+  `CANCELADA_POR_PROFESIONAL`), servicio (`servicioId`, `nombre`, `duracionMin`),
+  `clientePrimerNombre`, `direccionExacta`, desglose (`precioBaseCop`, `precioDomicilioCop`,
+  `precioTotalCop`), marcas `llegadaEn`, `iniciadoEn`, `finalizadoEn`, `canceladoEn`,
+  `intentosFallidosPin`, `bloqueadoHasta`, `motivoCancelacion`.
+- **El PIN no forma parte de esta respuesta.** Nunca.
+- **Errores:** `401`, `403` `PROFESIONAL_NO_HABILITADO`.
+
+### POST `/api/v1/profesionales/me/servicios-en-curso/:id/llegada`
+
+- **Idempotente.** Solo desde `EN_CAMINO`. Si ya está en `LLEGUE` o `INICIADO`, devuelve el estado
+  actual sin retroceder.
+- **Efecto:** `etapa = LLEGUE`, guarda `llegadaEn`. El cliente pasa a ver su PIN de 4 dígitos.
+- **Respuesta 200:** `{ servicio, ahoraServidor }`.
+- **Errores:** `400` `VALIDATION`, `403` `PROFESIONAL_NO_HABILITADO`, `404`
+  `SERVICIO_EN_CURSO_NO_ENCONTRADO`, `409` `ETAPA_NO_PERMITE_ACCION`.
+
+### POST `/api/v1/profesionales/me/servicios-en-curso/:id/validar-pin`
+
+- **Body:** `{ "pin": "1234" }` (exactamente 4 dígitos). El servidor compara contra el PIN guardado
+  (hash). **La respuesta nunca incluye el PIN.**
+- **Reglas:** máximo **3 intentos fallidos**. Al tercero, bloqueo de **5 minutos** con
+  `bloqueadoHasta` del servidor. Al cumplirse el bloqueo se **reinician los 3 intentos**. Rate limit
+  por solicitud, cuenta e IP.
+- **Respuesta 200:** `{ resultado: "VALIDO" | "INVALIDO" | "BLOQUEADO", intentosRestantes,
+  bloqueadoHasta, servicio, ahoraServidor }`. Un PIN mal escrito no es un 4xx de negocio: va en
+  `resultado`.
+- **Efecto `VALIDO`:** `etapa = INICIADO`, guarda `iniciadoEn`. Si ya estaba `INICIADO`, responde
+  `VALIDO` sin consumir otro intento.
+- **Errores:** `400` `VALIDATION` (PIN que no tiene 4 dígitos), `403` `PROFESIONAL_NO_HABILITADO`,
+  `404` `SERVICIO_EN_CURSO_NO_ENCONTRADO`, `409` `ETAPA_NO_PERMITE_ACCION` (no está en `LLEGUE`).
+
+### POST `/api/v1/profesionales/me/servicios-en-curso/:id/cancelar`
+
+- **Body:** `{ "motivo": "CLIENTE_AUSENTE" | "DIRECCION_INCORRECTA" | "CLIENTE_CANCELO_EN_PERSONA" | "NO_PUEDO_CONTINUAR" }`.
+  Sin texto libre.
+- **Reglas:** solo en `EN_CAMINO` y `LLEGUE`. **No** en `INICIADO`.
+- **Efecto:** `etapa = CANCELADA_POR_PROFESIONAL`. El cliente **no paga nada** y el matching busca
+  otro profesional. El profesional **queda OCUPADO** hasta que él pase a Disponible. Registrar la
+  cancelación (`profesionalId`, `servicioId`, motivo, timestamp servidor, IP) para detectar abuso.
+- **Idempotente** si ya está cancelada.
+- **Respuesta 200:** `{ servicio, ahoraServidor }`.
+- **Errores:** `400` `VALIDATION` (motivo no permitido), `404` `SERVICIO_EN_CURSO_NO_ENCONTRADO`,
+  `409` `ETAPA_NO_PERMITE_ACCION`.
+
+### POST `/api/v1/profesionales/me/servicios-en-curso/:id/finalizar`
+
+- **Reglas:** solo si `etapa = INICIADO`. **Idempotente** si ya está `FINALIZADO`.
+- **Efecto:** `etapa = FINALIZADO`, guarda `finalizadoEn`. El profesional **sigue OCUPADO**.
+- **Respuesta 200:** `{ servicio, ahoraServidor }`.
+- **Errores:** `404` `SERVICIO_EN_CURSO_NO_ENCONTRADO`, `409` `ETAPA_NO_PERMITE_ACCION`.
+
+### Eventos (WebSocket / push)
+
+| Evento | Uso |
+|--------|-----|
+| `servicio.llegada` | El profesional marcó llegada; el cliente muestra el PIN |
+| `servicio.iniciado` | PIN válido; el cliente ya no puede cancelar |
+| `servicio.cancelado_por_profesional` | Canceló el profesional; el cliente no paga y se busca otro |
+| `servicio.finalizado` | El profesional cerró el servicio |
+
+### Reglas que el servidor debe revalidar
+
+- Etapa actual antes de llegada, PIN, cancelar o finalizar.
+- PIN, intentos y `bloqueadoHasta` con hora de servidor.
+- Motivo dentro de la lista cerrada.
+- Con servicio activo (`EN_CAMINO`, `LLEGUE` o `INICIADO`): `PATCH .../disponibilidad` a
+  **DISPONIBLE** y el cierre de sesión responden **`409`/`403` `SERVICIO_EN_CURSO_ACTIVO`**.
+- El **cliente no puede cancelar** si el servicio está **INICIADO**.
+
+### Decisiones pendientes
+
+- Efecto en comisión y en pago en efectivo cuando el profesional cancela (el cliente no paga; cómo
+  se registra la comisión queda abierto).
+- Si el profesional debe poder reportar un problema durante **INICIADO** (hoy no hay salida ni
+  cancelación en esa etapa).
