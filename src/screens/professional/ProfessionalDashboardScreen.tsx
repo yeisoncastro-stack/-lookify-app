@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
@@ -25,6 +26,7 @@ import StarRating from '../../components/StarRating';
 import { ProfessionalStackParamList } from '../../navigation/ProfessionalStackNavigator';
 import { resetProfessionalSession } from '../../navigation/professionalNavigation';
 import { getProfessionalDashboardService } from '../../services/professionalDashboardService';
+import { getProfessionalIncomingRequestService } from '../../services/professionalIncomingRequestService';
 import { ServiceError } from '../../services/errors';
 import { PanelPrincipalResponse } from '../../types/professionalDashboard';
 import { FOTO_PERFIL_IMAGE_PICKER_QUALITY } from '../../constants/professionalProfilePhoto';
@@ -106,10 +108,33 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
   const [fotoBusy, setFotoBusy] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [fotoError, setFotoError] = useState<string | null>(null);
+  const [solicitudEntranteActiva, setSolicitudEntranteActiva] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
+
+  const refrescarSolicitudActiva = useCallback(async () => {
+    if (!params.profesionalId) {
+      setSolicitudEntranteActiva(false);
+      return;
+    }
+    try {
+      const activa = await getProfessionalIncomingRequestService().obtenerSolicitudActiva({
+        profesionalId: params.profesionalId,
+      });
+      const vigente =
+        activa != null &&
+        (activa.estado === 'PENDIENTE_PRO' || activa.estado === 'ESPERANDO_CLIENTE');
+      setSolicitudEntranteActiva(vigente);
+    } catch {
+      setSolicitudEntranteActiva(false);
+    }
+  }, [params.profesionalId]);
 
   const ejecutarCierreSesion = useCallback(async () => {
     permitirSalida.current = true;
     try {
+      await getProfessionalIncomingRequestService().alCerrarSesion({
+        profesionalId: params.profesionalId,
+      });
       await getProfessionalDashboardService().registrarCierreSesion({
         profesionalId: params.profesionalId,
       });
@@ -154,6 +179,13 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
     setLoading(true);
     cargarPanel().finally(() => setLoading(false));
   }, [cargarPanel]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refrescarSolicitudActiva();
+      void cargarPanel();
+    }, [refrescarSolicitudActiva, cargarPanel])
+  );
 
   useEffect(() => {
     const onBack = () => {
@@ -289,7 +321,27 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
     navigation.navigate('ProfessionalPortfolioPlaceholder', params);
   };
 
+  const handleDemoSolicitudEntrante = async () => {
+    if (demoBusy || !params.solicitudId) {
+      return;
+    }
+    setDemoBusy(true);
+    try {
+      await getProfessionalIncomingRequestService().simularSolicitudEntrante({
+        profesionalId: params.profesionalId,
+        solicitudId: params.solicitudId,
+      });
+      await refrescarSolicitudActiva();
+    } catch {
+      Alert.alert('Demo', 'No se pudo simular la solicitud. Debes estar disponible.');
+    } finally {
+      setDemoBusy(false);
+    }
+  };
+
   const disponible = panel?.disponibilidad === 'DISPONIBLE';
+  const demoSolicitudDeshabilitado =
+    !disponible || solicitudEntranteActiva || demoBusy || !params.solicitudId;
   const tieneResenas = (panel?.totalResenas ?? 0) > 0;
 
   return (
@@ -431,6 +483,16 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
               ))
             )}
           </View>
+
+          {__DEV__ ? (
+            <Button
+              label="DEMO — simular solicitud entrante"
+              variant="outline"
+              onPress={() => void handleDemoSolicitudEntrante()}
+              disabled={demoSolicitudDeshabilitado}
+              loading={demoBusy}
+            />
+          ) : null}
 
           <Button label="Mi portafolio" variant="outline" onPress={handlePortafolio} />
           <Button

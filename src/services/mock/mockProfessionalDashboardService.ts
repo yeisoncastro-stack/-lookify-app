@@ -5,6 +5,8 @@ import {
   CambiarDisponibilidadResponse,
   ObtenerPanelPrincipalRequest,
   PanelPrincipalResponse,
+  ConsultarDisponibilidadRequest,
+  ConsultarDisponibilidadResponse,
   RegistrarCierreSesionRequest,
 } from '../../types/professionalDashboard';
 import { FotoPerfilMimePermitido } from '../../constants/professionalProfilePhoto';
@@ -141,6 +143,16 @@ export function createMockProfessionalDashboardService(): ProfessionalDashboardS
         throw new ServiceError('VALIDATION');
       }
       setDisponibilidad(input.profesionalId, 'OCUPADO');
+    },
+
+    async consultarDisponibilidad(
+      input: ConsultarDisponibilidadRequest
+    ): Promise<ConsultarDisponibilidadResponse> {
+      await delay(50);
+      if (!input.profesionalId) {
+        throw new ServiceError('VALIDATION');
+      }
+      return { disponibilidad: getDisponibilidad(input.profesionalId) };
     },
   };
 }

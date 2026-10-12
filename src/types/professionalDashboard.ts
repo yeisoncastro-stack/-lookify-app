@@ -67,3 +67,11 @@ export interface ActualizarFotoPerfilResponse {
 export interface RegistrarCierreSesionRequest {
   profesionalId: string;
 }
+
+export interface ConsultarDisponibilidadRequest {
+  profesionalId: string;
+}
+
+export interface ConsultarDisponibilidadResponse {
+  disponibilidad: DisponibilidadProfesional;
+}

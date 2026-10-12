@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ProfessionalIncomingRequestListener from './ProfessionalIncomingRequestListener';
 
 import ProfessionalLoginScreen from '../screens/professional/ProfessionalLoginScreen';
 import RegisterProfessionalScreen from '../screens/RegisterProfessionalScreen';
@@ -11,6 +12,12 @@ import ProfessionalVerificationScreen from '../screens/professional/Professional
 import ProfessionalServiceSelectionScreen from '../screens/professional/ProfessionalServiceSelectionScreen';
 import ProfessionalCertificateUploadScreen from '../screens/professional/ProfessionalCertificateUploadScreen';
 import { ProfessionalSessionRouteParams } from '../types/professionalAuth';
+import {
+  ProfessionalIncomingRequestRouteParams,
+  ProfessionalServiceInProgressRouteParams,
+} from '../types/professionalIncomingRequest';
+import ProfessionalIncomingRequestScreen from '../screens/professional/ProfessionalIncomingRequestScreen';
+import ProfessionalServiceInProgressPlaceholderScreen from '../screens/professional/placeholders/ProfessionalServiceInProgressPlaceholderScreen';
 
 export type ProfessionalStackParamList = {
   ProfessionalLogin: undefined;
@@ -22,13 +29,17 @@ export type ProfessionalStackParamList = {
   ProfessionalDashboardPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalPortfolioPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalVerificationPlaceholder: ProfessionalSessionRouteParams;
+  ProfessionalIncomingRequest: ProfessionalIncomingRequestRouteParams;
+  ProfessionalServiceInProgressPlaceholder: ProfessionalServiceInProgressRouteParams;
 };
 
 const Stack = createNativeStackNavigator<ProfessionalStackParamList>();
 
 export default function ProfessionalStackNavigator() {
   return (
-    <Stack.Navigator initialRouteName="ProfessionalLogin" screenOptions={{ headerShown: false }}>
+    <>
+      <ProfessionalIncomingRequestListener />
+      <Stack.Navigator initialRouteName="ProfessionalLogin" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfessionalLogin" component={ProfessionalLoginScreen} />
       <Stack.Screen name="RegisterProfessional" component={RegisterProfessionalScreen} />
       <Stack.Screen name="ProfessionalTermsRead" component={ProfessionalTermsReadScreen} />
@@ -53,6 +64,15 @@ export default function ProfessionalStackNavigator() {
         name="ProfessionalCertificateUploadPlaceholder"
         component={ProfessionalCertificateUploadScreen}
       />
+      <Stack.Screen
+        name="ProfessionalIncomingRequest"
+        component={ProfessionalIncomingRequestScreen}
+      />
+      <Stack.Screen
+        name="ProfessionalServiceInProgressPlaceholder"
+        component={ProfessionalServiceInProgressPlaceholderScreen}
+      />
     </Stack.Navigator>
+    </>
   );
 }

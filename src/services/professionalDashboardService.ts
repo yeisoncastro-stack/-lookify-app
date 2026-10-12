@@ -3,6 +3,8 @@ import {
   ActualizarFotoPerfilResponse,
   CambiarDisponibilidadRequest,
   CambiarDisponibilidadResponse,
+  ConsultarDisponibilidadRequest,
+  ConsultarDisponibilidadResponse,
   ObtenerPanelPrincipalRequest,
   PanelPrincipalResponse,
   RegistrarCierreSesionRequest,
@@ -16,6 +18,9 @@ export interface ProfessionalDashboardService {
   ): Promise<CambiarDisponibilidadResponse>;
   actualizarFotoPerfil(input: ActualizarFotoPerfilRequest): Promise<ActualizarFotoPerfilResponse>;
   registrarCierreSesion(input: RegistrarCierreSesionRequest): Promise<void>;
+  consultarDisponibilidad(
+    input: ConsultarDisponibilidadRequest
+  ): Promise<ConsultarDisponibilidadResponse>;
 }
 
 let implementation: ProfessionalDashboardService = createMockProfessionalDashboardService();
