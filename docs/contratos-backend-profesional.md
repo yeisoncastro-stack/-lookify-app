@@ -1,4 +1,4 @@
-# Contratos backend — App Profesional (pantallas 3–7)
+# Contratos backend — App Profesional (pantallas 3–8)
 
 Documento de referencia para implementación server-side. El frontend mock valida las mismas reglas; el servidor **debe revalidar todo**.
 
@@ -156,3 +156,82 @@ profesional.
 - **Operaciones técnicas recomendadas:** escaneo antivirus/malware en upload, almacenamiento de
   medios en bucket privado con URLs firmadas de corta vigencia, auditoría de reportes y acciones
   admin, retención y borrado al eliminar cuenta (política de datos TBD).
+
+## Pantalla 8 — Solicitud entrante
+
+Requisito transversal: mismo JWT que el panel (**aprobado + activado**). El matching solo ofrece
+solicitudes a profesionales **verificados, activados y DISPONIBLES**. **Una sola solicitud activa**
+por profesional en el servidor. La **dirección exacta del cliente no** viaja en la solicitud entrante.
+
+### Evento en tiempo real — WebSocket y push `solicitud.entrante`
+
+Payload (**`SolicitudEntrante`**, cuerpo compartido push/WebSocket):
+
+- `id` (solicitud entrante)
+- `servicio` (`servicioId`, `nombre`, `duracionMin`)
+- `distanciaKmAprox` (aproximada; sin dirección exacta)
+- `desglose`: `precioBaseCop`, `precioDomicilioCop`, `precioTotalCop`
+- `clientePrimerNombre` (solo primer nombre)
+- `calificacionCliente` (opcional; `null` si el cliente no tiene reseñas)
+- `expiraEn` (**ISO8601**, marca de tiempo **del servidor** — autoridad para la ventana de 30 s)
+
+### Eventos de seguimiento (WebSocket / push)
+
+| Evento | Uso |
+|--------|-----|
+| `solicitud.expirada` | Ventana de 30 s cerrada en servidor |
+| `solicitud.cliente_acepto` | Cliente confirmó tras aceptación del pro → pro **OCUPADO** |
+| `solicitud.cliente_rechazo` | Cliente rechazó la oferta → pro sigue **DISPONIBLE** |
+| `solicitud.ya_asignada` | La solicitud ya no está vigente para este pro |
+
+### GET `/api/v1/profesionales/me/solicitud-activa`
+
+- **Uso:** recuperación al reabrir la app o reconectar WebSocket.
+- **Respuesta 200:** `{ solicitud: SolicitudEntrante | null }` (null si no hay vigente).
+- **Errores:** `403` `PROFESIONAL_NO_HABILITADO`.
+
+### POST `/api/v1/profesionales/me/solicitudes-entrantes/:id/aceptar`
+
+- **Idempotente.** El servidor revalida: pro **DISPONIBLE**, solicitud **existe**, **vigente**,
+  **dirigida a ese profesional**, no expirada.
+- **Respuesta 200:** `{ resultado: "ACEPTADA" | "RECHAZADA" | "EXPIRADA" | "YA_ASIGNADA", … }`.
+- **Efecto éxito `ACEPTADA`:** estado solicitud → espera cliente; pro permanece **DISPONIBLE** hasta
+  `solicitud.cliente_acepto`.
+- **Errores:** `403` `PROFESIONAL_NO_DISPONIBLE` / `PROFESIONAL_NO_HABILITADO`, `404`
+  `SOLICITUD_ENTRANTE_NO_ENCONTRADA`, `409` `SOLICITUD_NO_VIGENTE`.
+
+### POST `/api/v1/profesionales/me/solicitudes-entrantes/:id/rechazar`
+
+- **Idempotente.** Mismas revalidaciones que aceptar (excepto transición a espera cliente).
+- **Respuesta 200:** `{ resultado: "RECHAZADA" | "EXPIRADA" | "YA_ASIGNADA", … }`.
+- **Efecto:** pro sigue **DISPONIBLE**; liberar slot de solicitud activa.
+- **Errores:** como aceptar.
+
+### POST `/api/v1/profesionales/me/solicitudes-entrantes/:id/procesar-expiracion` (opcional explícito)
+
+- **Uso:** la app llama al llegar a `expiraEn` en UI para que el **servidor** confirme expiración
+  (el reloj del celular **no** es fuente de verdad).
+- **Respuesta 200:** `{ resultado: "EXPIRADA" | "YA_ASIGNADA" | … }`.
+- **Errores:** `404`, `409` `SOLICITUD_NO_VIGENTE`.
+
+### Reglas que el servidor debe revalidar (resumen)
+
+- Profesional **aprobado**, **activado** y **`disponibilidad = DISPONIBLE`** al aceptar/rechazar
+  dentro de la ventana.
+- Solicitud **existe**, **vigente**, **no expirada** según **`expiraEn` del servidor**, asignada a
+  ese `profesionalId`.
+- **Una sola solicitud activa** por profesional.
+- Tras **`solicitud.cliente_acepto`:** PATCH disponibilidad → **OCUPADO** (o transacción atómica
+  en el mismo evento).
+- Matching: solo profesionales **verificados, activados y DISPONIBLES**.
+
+### Seguridad y privacidad
+
+- **Dirección exacta** del cliente: solo tras **aceptación mutua** (pro aceptó + cliente confirmó);
+  no en `solicitud.entrante`.
+- **Registro de push token** por dispositivo (`POST` TBD) vinculado al JWT del profesional; invalidar
+  al logout.
+- **Auditoría:** aceptaciones, rechazos, expiraciones y cambios a **OCUPADO** por aceptación del
+  cliente — `profesionalId`, `solicitudId`, timestamps servidor, resultado (`ACEPTADA` / `RECHAZADA` /
+  `EXPIRADA` / `YA_ASIGNADA`), IP/dispositivo cuando aplique.
+- Rate limit en aceptar/rechazar por solicitud y por cuenta.

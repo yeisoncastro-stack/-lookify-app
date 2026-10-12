@@ -4,11 +4,12 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 8
-(Solicitud entrante, ventana de 30 s).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 9
+(Servicio en curso: En camino, Llegué, Iniciado e ingreso del PIN del cliente).
 
-**Commits recientes (`main`):** `f71d7a9` — feat(pro) pantalla 7 Mi portafolio ·
-`1232f39` — docs(pro) contratos backend panel principal.
+**Commits recientes:** `08c217c` — feat(pro) pantalla 8 solicitud entrante (rama
+`feat/pantalla-8`) · `f71d7a9` — feat(pro) pantalla 7 Mi portafolio (`main`) ·
+`4c6af94` — docs(pro) contratos backend pantallas 3–7 (`main`).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -160,8 +161,9 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 5. Estado de verificación — **verificada en celular USB**
 6. Panel principal (toggle Disponible/Ocupado) — **verificada en celular USB**
 7. Mi portafolio — **verificada en celular USB**
-8. Solicitud entrante (ventana de 30 s) — **siguiente en implementación**
-9. Servicio en curso (ingreso PIN del cliente)
+8. Solicitud entrante (ventana de 30 s) — **verificada en celular USB** (pruebas 1–8 y
+   regresión toggle; pruebas 9–10 no verificables a mano con la app actual)
+9. Servicio en curso (En camino, Llegué, Iniciado + ingreso PIN del cliente) — **siguiente en implementación**
 10. Historial/ingresos
 
 ### App Profesional — 10 pantallas oficiales (sin renumerar)
@@ -203,10 +205,9 @@ opcional: contexto de sesión + JWT en `expo-secure-store` (decidir más adelant
 
 **Navegación (stack pro):** el root del cliente tiene una sola entrada a la app
 profesional, `ProfessionalApp`, que monta `ProfessionalStackNavigator` (`src/navigation/ProfessionalStackNavigator.tsx`)
-con **9 rutas pro:** `ProfessionalLogin`, `RegisterProfessional`, `ProfessionalTermsRead`,
-`ProfessionalPrivacyRead`, `ProfessionalServiceSelection`,
-`ProfessionalCertificateUploadPlaceholder`, `ProfessionalDashboardPlaceholder`,
-`ProfessionalPortfolioPlaceholder`, `ProfessionalVerificationPlaceholder`. Tipo de cuenta → `navigate('ProfessionalApp')`.
+con rutas pro incl. **`ProfessionalIncomingRequest`**, **`ProfessionalServiceInProgressPlaceholder`**
+(placeholder pantalla 9), más login, registro, legal, onboarding 3–5, panel, portafolio y
+verificación (varias rutas legacy con sufijo **Placeholder**). Tipo de cuenta → `navigate('ProfessionalApp')`.
 Helper `resetProfessionalSession` (`src/navigation/professionalNavigation.ts`): login
 exitoso, registro exitoso, guardar servicios, params inválidos y cerrar sesión hacen
 **reset en el root** a una sola ruta `ProfessionalApp` con el stack anidado en la
@@ -429,6 +430,59 @@ video galería + preview, servicio asociado).
 **Backend pendiente (pantalla 7):** ver `docs/contratos-backend-profesional.md` (CRUD portafolio,
 moderación a posteriori).
 
+### App Profesional — Solicitud entrante (pantalla 8)
+
+`ProfessionalIncomingRequestScreen.tsx` en ruta **`ProfessionalIncomingRequest`**. **No tiene botón
+de entrada** en el panel: la pantalla aparece cuando llega una solicitud y solo si el profesional
+está **verificado (APROBADO)**, **activado** y en toggle **DISPONIBLE**. Ventana de **30 s** con
+**`expiraEn`** como autoridad del servidor; la UI recalcula el tiempo restante al volver a primer
+plano (`AppState`). Al llegar a **0** la pantalla llama al servicio **`procesarExpiracion`** — la
+app **no** decide sola si expiró. **Rechazar** o **expirar** deja al profesional **Disponible**,
+sin penalización. **Atrás** (gesto o botón Android) cuenta como **rechazar** con `Alert` de
+confirmación. Tras **Aceptar** queda en **«Esperando respuesta del cliente»** (sin cuenta de 30 s).
+Si el **cliente acepta** → disponibilidad **OCUPADO** automáticamente y **`replace`** a
+**`ProfessionalServiceInProgressPlaceholder`** (pantalla 9 provisional). Si el **cliente rechaza**
+→ sigue **Disponible**. **Una sola solicitud activa** por profesional.
+
+Contenido visible: servicio, **distancia aproximada**, **primer nombre** del cliente
+(`primerNombre.ts`), calificación si hay reseñas, desglose **Precio base + Domicilio = Total**; **sin
+dirección exacta**. Comisión del **15 % oculta**; **sin ajuste ±20 %** en esta pantalla.
+
+**Arquitectura:** **`getProfessionalIncomingRequestService()`** — `obtenerSolicitudActiva`,
+`suscribirseASolicitudesEntrantes`, `obtenerSolicitud`, `aceptarSolicitud`, `rechazarSolicitud`,
+`procesarExpiracion`, `alCerrarSesion`; métodos DEMO **`simularSolicitudEntrante`**, `simularClienteAcepta`,
+`simularClienteRechaza`, `simularExpiracionSolicitud` (**solo `__DEV__`**). Respuestas de acción:
+**`resultado`:** `ACEPTADA` | `RECHAZADA` | `EXPIRADA` | `YA_ASIGNADA`. Errores nuevos:
+**`PROFESIONAL_NO_DISPONIBLE`**, **`SOLICITUD_ENTRANTE_NO_ENCONTRADA`**, **`SOLICITUD_NO_VIGENTE`**.
+
+**`ProfessionalIncomingRequestListener`** montado a nivel del stack pro (hermano del
+`<Stack.Navigator>`): cuando hay solicitud vigente y el pro está DISPONIBLE, abre la pantalla 8
+desde **cualquier pantalla** de la sesión. Navegación anidada desde el **root**:
+`navigate('ProfessionalApp', { screen: 'ProfessionalIncomingRequest', params })` — en USB apareció
+el error *«NAVIGATE was not handled by any navigator»* al usar `navigate('ProfessionalIncomingRequest')`
+directo porque `useNavigation()` enlazaba al navigator padre; corregido con **`RootStackParamList`**.
+Estado de ruta para deduplicar aperturas: **`professionalSessionFromState.ts`** (recorre estado anidado).
+
+**Disponibilidad en listener:** polling **`consultarDisponibilidad`** vía
+`getProfessionalDashboardService()` (~1,5 s) mientras hay sesión; el backend lo reemplazará por evento.
+
+**Mock:** store en memoria por **`profesionalId`**; **se pierde al recargar** la app. DEMO en panel
+(**`__DEV__`**) simula solicitud entrante; en pantalla 8 en espera, DEMO cliente acepta/rechaza.
+
+**Verificada en celular USB** (pruebas 1–8 documentadas en turno de QA + regresión toggle Disponible/Ocupado).
+
+**Deudas / follow-ups (pantalla 8):**
+- **(a)** Pruebas USB **9** (solicitud sobre **Mi portafolio**) y **10** (DEMO deshabilitado con
+  solicitud activa) **no verificables a mano**; para probar la 9, agregar botón DEMO temporal en
+  portafolio si se desea.
+- **(b)** Listener usa **polling** de disponibilidad; backend → evento push/WebSocket.
+- **(c)** Comisión **15 % visible** al profesional y ajuste **±20 %** siguen pendientes (retomar con
+  pantallas 9 y 10).
+- **(d)** **`ProfessionalServiceInProgressPlaceholder`** lo reemplaza la pantalla 9 real.
+- **(e)** La solicitud solo llega con la **app abierta**; **notificaciones push** en fase backend.
+
+**Backend pendiente (pantalla 8):** ver `docs/contratos-backend-profesional.md`.
+
 **Contrato de servicios (resto; HTTP no implementado):**
 
 | Pantalla pro | Función servicio | HTTP previsto (TBD) |
@@ -439,6 +493,7 @@ moderación a posteriori).
 | 5 Estado verificación | `getProfessionalVerificationService()` | GET estado · POST corregir · POST reenviar/validar código — **mock** |
 | 6 Panel principal | `getProfessionalDashboardService()` | GET panel · PATCH disponibilidad · POST foto — **mock** |
 | 7 Mi portafolio | `getProfessionalPortfolioService()` | GET/POST/PATCH/DELETE portafolio · POST portada/reorden — **mock** |
+| 8 Solicitud entrante | `getProfessionalIncomingRequestService()` | WebSocket/push + GET activa · POST aceptar/rechazar — **mock** |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
 
@@ -456,8 +511,9 @@ Las pantallas pro hablan solo con `src/services/` (interfaz + mock + `ServiceErr
 No importan `mockUsers`, `mockProfessionals` ni seeds directamente. Punto de entrada:
 `getProfessionalAuthService()`, `getProfessionalRegistrationService()`,
 `getProfessionalCertificateService()`, `getProfessionalVerificationService()`,
-`getProfessionalDashboardService()`, `getProfessionalPortfolioService()` (implementación
-intercambiable). Login y registro pro ya siguen este patrón.
+`getProfessionalDashboardService()`, `getProfessionalPortfolioService()`,
+`getProfessionalIncomingRequestService()` (implementación intercambiable). Login y registro pro ya
+siguen este patrón.
 
 ### Navegación App Profesional (stack separado)
 El `RootStackParamList` del cliente expone solo `ProfessionalApp` hacia el flujo pro.
@@ -631,9 +687,9 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
 - Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` según
   `estadoSolicitud`, `onboardingPaso` y `profesionalActivado`.
-- Stack pro: pantallas 3–7 implementadas; rutas legacy 4–7 (`…UploadPlaceholder`,
+- Stack pro: pantallas 3–8 implementadas; rutas legacy 4–7 (`…UploadPlaceholder`,
   `…VerificationPlaceholder`, `…DashboardPlaceholder`, `…PortfolioPlaceholder` con pantalla real).
-  Siguiente: pantalla 8 Solicitud entrante.
+  Siguiente: pantalla 9 Servicio en curso (placeholder `ProfessionalServiceInProgressPlaceholder`).
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:
