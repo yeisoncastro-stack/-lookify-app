@@ -27,8 +27,11 @@ import { ProfessionalStackParamList } from '../../navigation/ProfessionalStackNa
 import { resetProfessionalSession } from '../../navigation/professionalNavigation';
 import { getProfessionalDashboardService } from '../../services/professionalDashboardService';
 import { getProfessionalIncomingRequestService } from '../../services/professionalIncomingRequestService';
+import { getProfessionalServiceInProgressService } from '../../services/professionalServiceInProgressService';
 import { ServiceError } from '../../services/errors';
 import { PanelPrincipalResponse } from '../../types/professionalDashboard';
+import { esEtapaServicioActiva, ServicioEnCurso } from '../../types/professionalServiceInProgress';
+import { ETIQUETA_ETAPA_SERVICIO } from '../../constants/professionalServiceInProgress';
 import { FOTO_PERFIL_IMAGE_PICKER_QUALITY } from '../../constants/professionalProfilePhoto';
 import { formatCOP } from '../../utils/pricing';
 
@@ -109,7 +112,11 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [fotoError, setFotoError] = useState<string | null>(null);
   const [solicitudEntranteActiva, setSolicitudEntranteActiva] = useState(false);
+  const [servicioActivo, setServicioActivo] = useState<ServicioEnCurso | null>(null);
+  const servicioActivoRef = useRef<ServicioEnCurso | null>(null);
   const [demoBusy, setDemoBusy] = useState(false);
+
+  servicioActivoRef.current = servicioActivo;
 
   const refrescarSolicitudActiva = useCallback(async () => {
     if (!params.profesionalId) {
@@ -129,7 +136,28 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
     }
   }, [params.profesionalId]);
 
+  const refrescarServicioActivo = useCallback(async () => {
+    if (!params.profesionalId) {
+      setServicioActivo(null);
+      return;
+    }
+    try {
+      const res = await getProfessionalServiceInProgressService().obtenerServicioActivo({
+        profesionalId: params.profesionalId,
+      });
+      const activo =
+        res.servicio && esEtapaServicioActiva(res.servicio.etapa) ? res.servicio : null;
+      setServicioActivo(activo);
+    } catch {
+      setServicioActivo(null);
+    }
+  }, [params.profesionalId]);
+
   const ejecutarCierreSesion = useCallback(async () => {
+    const activo = servicioActivoRef.current;
+    if (activo && esEtapaServicioActiva(activo.etapa)) {
+      return;
+    }
     permitirSalida.current = true;
     try {
       await getProfessionalIncomingRequestService().alCerrarSesion({
@@ -138,13 +166,54 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
       await getProfessionalDashboardService().registrarCierreSesion({
         profesionalId: params.profesionalId,
       });
-    } catch {
-      // Cierre de sesión igual aunque falle el mock.
+    } catch (error) {
+      if (error instanceof ServiceError && error.code === 'SERVICIO_EN_CURSO_ACTIVO') {
+        permitirSalida.current = false;
+        return;
+      }
     }
     resetProfessionalSession(navigation, 'ProfessionalLogin');
   }, [navigation, params.profesionalId]);
 
   const confirmarCerrarSesion = useCallback(() => {
+    void (async () => {
+    let activo = servicioActivoRef.current;
+    if (params.profesionalId) {
+      try {
+        const res = await getProfessionalServiceInProgressService().obtenerServicioActivo({
+          profesionalId: params.profesionalId,
+        });
+        activo = res.servicio && esEtapaServicioActiva(res.servicio.etapa) ? res.servicio : null;
+        setServicioActivo(activo);
+      } catch {
+        activo = servicioActivoRef.current;
+      }
+    }
+    if (activo && (activo.etapa === 'EN_CAMINO' || activo.etapa === 'LLEGUE')) {
+      Alert.alert(
+        '¿Cancelar este servicio?',
+        'El cliente no pagará y se buscará otro profesional.',
+        [
+          { text: 'Seguir', style: 'cancel' },
+          {
+            text: 'Cancelar',
+            style: 'destructive',
+            onPress: () => {
+              navigation.navigate('ProfessionalServiceInProgressPlaceholder', {
+                ...params,
+                solicitudEntranteId: activo.id,
+                abrirMotivosCancelacion: true,
+              });
+            },
+          },
+        ]
+      );
+      return;
+    }
+    if (activo && activo.etapa === 'INICIADO') {
+      Alert.alert('El servicio ya empezó', undefined, [{ text: 'Entendido' }]);
+      return;
+    }
     Alert.alert(
       '¿Cerrar sesión?',
       undefined,
@@ -154,7 +223,8 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
       ],
       { cancelable: true }
     );
-  }, [ejecutarCierreSesion]);
+    })();
+  }, [ejecutarCierreSesion, navigation, params]);
 
   const cargarPanel = useCallback(async () => {
     if (!params.profesionalId || !params.solicitudId) {
@@ -183,8 +253,9 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
   useFocusEffect(
     useCallback(() => {
       void refrescarSolicitudActiva();
+      void refrescarServicioActivo();
       void cargarPanel();
-    }, [refrescarSolicitudActiva, cargarPanel])
+    }, [refrescarSolicitudActiva, refrescarServicioActivo, cargarPanel])
   );
 
   useEffect(() => {
@@ -247,6 +318,8 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
     } catch (error) {
       if (error instanceof ServiceError && error.code === 'PROFESIONAL_NO_HABILITADO') {
         setToggleError('Tu cuenta aún no está habilitada para recibir solicitudes.');
+      } else if (error instanceof ServiceError && error.code === 'SERVICIO_EN_CURSO_ACTIVO') {
+        setToggleError('Termina o cancela el servicio en curso antes de ponerte disponible.');
       } else {
         setToggleError('No pudimos actualizar tu estado. Inténtalo de nuevo.');
       }
@@ -407,9 +480,11 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
                   {disponible ? 'Disponible' : 'Ocupado'}
                 </Text>
                 <Text style={styles.toggleHint}>
-                  {disponible
-                    ? 'Puedes recibir solicitudes de clientes'
-                    : 'No recibirás nuevas solicitudes'}
+                  {servicioActivo
+                    ? 'Tienes un servicio en curso. Termínalo o cancélalo para poder ponerte disponible.'
+                    : disponible
+                      ? 'Puedes recibir solicitudes de clientes'
+                      : 'No recibirás nuevas solicitudes'}
                 </Text>
               </View>
               <Switch
@@ -428,6 +503,23 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
             ) : null}
             {toggleError ? <Text style={styles.inlineError}>{toggleError}</Text> : null}
           </View>
+
+          {servicioActivo ? (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Tienes un servicio en curso</Text>
+              <Text style={styles.serviceName}>{servicioActivo.servicioNombre}</Text>
+              <Text style={styles.serviceMeta}>{ETIQUETA_ETAPA_SERVICIO[servicioActivo.etapa]}</Text>
+              <Button
+                label="Continuar servicio"
+                onPress={() =>
+                  navigation.navigate('ProfessionalServiceInProgressPlaceholder', {
+                    ...params,
+                    solicitudEntranteId: servicioActivo.id,
+                  })
+                }
+              />
+            </View>
+          ) : null}
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Resumen del día</Text>

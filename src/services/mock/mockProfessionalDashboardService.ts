@@ -29,6 +29,7 @@ import {
   setFotoPerfil,
 } from './mockProfessionalDashboardStore';
 import { validarArchivoFotoPerfil } from '../../utils/profilePhotoFile';
+import { hayServicioEnCursoActivo } from './mockProfessionalServiceInProgressStore';
 
 const MOCK_LATENCY_MS = 400;
 
@@ -107,6 +108,9 @@ export function createMockProfessionalDashboardService(): ProfessionalDashboardS
 
       if (input.disponibilidad === 'DISPONIBLE') {
         assertProfesionalHabilitado(input.profesionalId, input.solicitudId);
+        if (hayServicioEnCursoActivo(input.profesionalId, Date.now())) {
+          throw new ServiceError('SERVICIO_EN_CURSO_ACTIVO');
+        }
       }
 
       setDisponibilidad(input.profesionalId, input.disponibilidad);
@@ -141,6 +145,9 @@ export function createMockProfessionalDashboardService(): ProfessionalDashboardS
       await delay(100);
       if (!input.profesionalId) {
         throw new ServiceError('VALIDATION');
+      }
+      if (hayServicioEnCursoActivo(input.profesionalId, Date.now())) {
+        throw new ServiceError('SERVICIO_EN_CURSO_ACTIVO');
       }
       setDisponibilidad(input.profesionalId, 'OCUPADO');
     },

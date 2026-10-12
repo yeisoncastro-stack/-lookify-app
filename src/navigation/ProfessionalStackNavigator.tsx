@@ -12,12 +12,10 @@ import ProfessionalVerificationScreen from '../screens/professional/Professional
 import ProfessionalServiceSelectionScreen from '../screens/professional/ProfessionalServiceSelectionScreen';
 import ProfessionalCertificateUploadScreen from '../screens/professional/ProfessionalCertificateUploadScreen';
 import { ProfessionalSessionRouteParams } from '../types/professionalAuth';
-import {
-  ProfessionalIncomingRequestRouteParams,
-  ProfessionalServiceInProgressRouteParams,
-} from '../types/professionalIncomingRequest';
+import { ProfessionalIncomingRequestRouteParams } from '../types/professionalIncomingRequest';
+import { ProfessionalServiceInProgressRouteParams } from '../types/professionalServiceInProgress';
 import ProfessionalIncomingRequestScreen from '../screens/professional/ProfessionalIncomingRequestScreen';
-import ProfessionalServiceInProgressPlaceholderScreen from '../screens/professional/placeholders/ProfessionalServiceInProgressPlaceholderScreen';
+import ProfessionalServiceInProgressScreen from '../screens/professional/ProfessionalServiceInProgressScreen';
 
 export type ProfessionalStackParamList = {
   ProfessionalLogin: undefined;
@@ -70,7 +68,7 @@ export default function ProfessionalStackNavigator() {
       />
       <Stack.Screen
         name="ProfessionalServiceInProgressPlaceholder"
-        component={ProfessionalServiceInProgressPlaceholderScreen}
+        component={ProfessionalServiceInProgressScreen}
       />
     </Stack.Navigator>
     </>

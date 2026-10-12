@@ -92,6 +92,4 @@ export type ProfessionalIncomingRequestRouteParams = ProfessionalSessionRoutePar
   solicitudEntranteId: string;
 };
 
-export type ProfessionalServiceInProgressRouteParams = ProfessionalSessionRouteParams & {
-  solicitudEntranteId: string;
-};
+export type { ProfessionalServiceInProgressRouteParams } from './professionalServiceInProgress';

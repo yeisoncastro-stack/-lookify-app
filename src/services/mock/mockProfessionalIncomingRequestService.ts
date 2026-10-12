@@ -26,6 +26,7 @@ import {
   solicitudExiste,
 } from './mockProfessionalRegistryStore';
 import { getDisponibilidad, setDisponibilidad } from './mockProfessionalDashboardStore';
+import { crearServicioEnCursoDesdeAceptacion } from './mockProfessionalServiceInProgressStore';
 import {
   clearActiveSolicitud,
   clearExpiryTimer,
@@ -293,6 +294,15 @@ export function createMockProfessionalIncomingRequestService(): ProfessionalInco
         throw new ServiceError('SOLICITUD_NO_VIGENTE');
       }
       const actualizada: SolicitudEntrante = { ...s, estado: 'LISTA_PARA_SERVICIO' };
+      crearServicioEnCursoDesdeAceptacion({
+        solicitudEntranteId: s.id,
+        profesionalId: s.profesionalId,
+        servicioId: s.servicioId,
+        servicioNombre: s.servicioNombre,
+        duracionMin: s.duracionMin,
+        clientePrimerNombre: s.clientePrimerNombre,
+        desglose: s.desglose,
+      });
       setDisponibilidad(input.profesionalId, 'OCUPADO');
       publicar(input.profesionalId, 'ACTUALIZADA', actualizada);
       clearActiveSolicitud(input.profesionalId);
