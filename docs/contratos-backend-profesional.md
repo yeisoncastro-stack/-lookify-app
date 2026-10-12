@@ -197,8 +197,9 @@ Payload (**`SolicitudEntrante`**, cuerpo compartido push/WebSocket):
 - **Respuesta 200:** `{ resultado: "ACEPTADA" | "RECHAZADA" | "EXPIRADA" | "YA_ASIGNADA", … }`.
 - **Efecto éxito `ACEPTADA`:** estado solicitud → espera cliente; pro permanece **DISPONIBLE** hasta
   `solicitud.cliente_acepto`.
-- **Errores:** `403` `PROFESIONAL_NO_DISPONIBLE` / `PROFESIONAL_NO_HABILITADO`, `404`
-  `SOLICITUD_ENTRANTE_NO_ENCONTRADA`, `409` `SOLICITUD_NO_VIGENTE`.
+- **Errores:** `400` `VALIDATION` (id mal formado), `403` `PROFESIONAL_NO_DISPONIBLE` /
+  `PROFESIONAL_NO_HABILITADO`, `404` `SOLICITUD_ENTRANTE_NO_ENCONTRADA`, `409`
+  `SOLICITUD_NO_VIGENTE`.
 
 ### POST `/api/v1/profesionales/me/solicitudes-entrantes/:id/rechazar`
 
@@ -212,7 +213,8 @@ Payload (**`SolicitudEntrante`**, cuerpo compartido push/WebSocket):
 - **Uso:** la app llama al llegar a `expiraEn` en UI para que el **servidor** confirme expiración
   (el reloj del celular **no** es fuente de verdad).
 - **Respuesta 200:** `{ resultado: "EXPIRADA" | "YA_ASIGNADA" | … }`.
-- **Errores:** `404`, `409` `SOLICITUD_NO_VIGENTE`.
+- **Errores:** `400` `VALIDATION`, `404` `SOLICITUD_ENTRANTE_NO_ENCONTRADA`, `409`
+  `SOLICITUD_NO_VIGENTE`.
 
 ### Reglas que el servidor debe revalidar (resumen)
 
