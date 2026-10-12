@@ -6,8 +6,8 @@ export type DisponibilidadProfesional = 'DISPONIBLE' | 'OCUPADO';
 export interface ResumenDiaPanel {
   serviciosRealizados: number;
   ingresosCop: number;
-  /** Siempre true en mock hasta exista backend. */
-  datosMock: true;
+  /** Solo UI __DEV__: resumen de hoy basado únicamente en ítems de semilla */
+  muestraEtiquetaDatosEjemplo?: boolean;
 }
 
 export interface ServicioOfrecidoPanel {

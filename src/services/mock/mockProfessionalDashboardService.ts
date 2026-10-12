@@ -24,10 +24,10 @@ import {
   getDisponibilidad,
   getFotoPerfil,
   getResenasSeed,
-  getResumenDiaMock,
   setDisponibilidad,
   setFotoPerfil,
 } from './mockProfessionalDashboardStore';
+import { resumenHoyParaPanel } from './mockProfessionalEarningsHistoryStore';
 import { validarArchivoFotoPerfil } from '../../utils/profilePhotoFile';
 import { hayServicioEnCursoActivo } from './mockProfessionalServiceInProgressStore';
 
@@ -83,12 +83,15 @@ export function createMockProfessionalDashboardService(): ProfessionalDashboardS
       const calificacionPromedio =
         totalResenas > 0 ? (resenas?.calificacionPromedio ?? null) : null;
 
+      const now = Date.now();
+      const resumenDia = resumenHoyParaPanel(input.profesionalId, now);
+
       return {
         nombre: basico.nombre,
         calificacionPromedio,
         totalResenas,
         disponibilidad: getDisponibilidad(input.profesionalId),
-        resumenDia: getResumenDiaMock(),
+        resumenDia,
         ultimasResenas: resenas?.ultimas ?? [],
         serviciosOfrecidos,
         fotoPerfil: getFotoPerfil(input.profesionalId),

@@ -14,8 +14,10 @@ import ProfessionalCertificateUploadScreen from '../screens/professional/Profess
 import { ProfessionalSessionRouteParams } from '../types/professionalAuth';
 import { ProfessionalIncomingRequestRouteParams } from '../types/professionalIncomingRequest';
 import { ProfessionalServiceInProgressRouteParams } from '../types/professionalServiceInProgress';
+import { ProfessionalEarningsHistoryRouteParams } from '../types/professionalEarningsHistory';
 import ProfessionalIncomingRequestScreen from '../screens/professional/ProfessionalIncomingRequestScreen';
 import ProfessionalServiceInProgressScreen from '../screens/professional/ProfessionalServiceInProgressScreen';
+import ProfessionalEarningsHistoryScreen from '../screens/professional/ProfessionalEarningsHistoryScreen';
 
 export type ProfessionalStackParamList = {
   ProfessionalLogin: undefined;
@@ -29,6 +31,7 @@ export type ProfessionalStackParamList = {
   ProfessionalVerificationPlaceholder: ProfessionalSessionRouteParams;
   ProfessionalIncomingRequest: ProfessionalIncomingRequestRouteParams;
   ProfessionalServiceInProgressPlaceholder: ProfessionalServiceInProgressRouteParams;
+  ProfessionalEarningsHistory: ProfessionalEarningsHistoryRouteParams;
 };
 
 const Stack = createNativeStackNavigator<ProfessionalStackParamList>();
@@ -69,6 +72,10 @@ export default function ProfessionalStackNavigator() {
       <Stack.Screen
         name="ProfessionalServiceInProgressPlaceholder"
         component={ProfessionalServiceInProgressScreen}
+      />
+      <Stack.Screen
+        name="ProfessionalEarningsHistory"
+        component={ProfessionalEarningsHistoryScreen}
       />
     </Stack.Navigator>
     </>

@@ -523,7 +523,9 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Resumen del día</Text>
-            <Text style={styles.mockBadge}>Datos de ejemplo</Text>
+            {__DEV__ && panel.resumenDia.muestraEtiquetaDatosEjemplo ? (
+              <Text style={styles.mockBadge}>Datos de ejemplo</Text>
+            ) : null}
             <Text style={styles.statLine}>
               Servicios realizados:{' '}
               <Text style={styles.statValue}>{panel.resumenDia.serviciosRealizados}</Text>
@@ -532,6 +534,12 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
               Ingresos:{' '}
               <Text style={styles.statValue}>{formatCOP(panel.resumenDia.ingresosCop)}</Text>
             </Text>
+            <Button
+              label="Mis ingresos"
+              variant="outline"
+              onPress={() => navigation.navigate('ProfessionalEarningsHistory', params)}
+              style={styles.ingresosButton}
+            />
           </View>
 
           <View style={styles.card}>
@@ -799,5 +807,8 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: spacing.sm,
+  },
+  ingresosButton: {
+    marginTop: spacing.md,
   },
 });

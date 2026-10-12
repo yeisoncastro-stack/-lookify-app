@@ -23,6 +23,7 @@ import {
 import { ServiceError } from '../errors';
 import { ProfessionalServiceInProgressService } from '../professionalServiceInProgressService';
 import { isProfesionalActivado } from './mockProfessionalRegistryStore';
+import { registrarDesdeServicioEnCursoInterno } from './mockProfessionalEarningsHistoryStore';
 import {
   guardarServicioEnCurso,
   leerRegistroServicioEnCurso,
@@ -195,6 +196,7 @@ export function createMockProfessionalServiceInProgressService(): ProfessionalSe
       }
       const actual = reg.servicio;
       if (actual.etapa === 'CANCELADA_POR_PROFESIONAL') {
+        registrarDesdeServicioEnCursoInterno(input.profesionalId, actual);
         return { servicio: actual, ahoraServidor: now };
       }
       if (actual.etapa !== 'EN_CAMINO' && actual.etapa !== 'LLEGUE') {
@@ -206,6 +208,7 @@ export function createMockProfessionalServiceInProgressService(): ProfessionalSe
         motivoCancelacion: input.motivo,
         canceladoEn: now,
       });
+      registrarDesdeServicioEnCursoInterno(input.profesionalId, servicio);
       return { servicio, ahoraServidor: now };
     },
 
@@ -217,6 +220,7 @@ export function createMockProfessionalServiceInProgressService(): ProfessionalSe
       const reg = exigirRegistro(input.profesionalId, input.servicioId, now);
       const actual = reg.servicio;
       if (actual.etapa === 'FINALIZADO') {
+        registrarDesdeServicioEnCursoInterno(input.profesionalId, actual);
         return { servicio: actual, ahoraServidor: now };
       }
       if (actual.etapa !== 'INICIADO') {
@@ -227,6 +231,7 @@ export function createMockProfessionalServiceInProgressService(): ProfessionalSe
         etapa: 'FINALIZADO',
         finalizadoEn: now,
       });
+      registrarDesdeServicioEnCursoInterno(input.profesionalId, servicio);
       return { servicio, ahoraServidor: now };
     },
 
