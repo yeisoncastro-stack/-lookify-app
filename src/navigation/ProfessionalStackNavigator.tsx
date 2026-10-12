@@ -6,7 +6,7 @@ import RegisterProfessionalScreen from '../screens/RegisterProfessionalScreen';
 import ProfessionalTermsReadScreen from '../screens/professional/ProfessionalTermsReadScreen';
 import ProfessionalPrivacyReadScreen from '../screens/professional/ProfessionalPrivacyReadScreen';
 import ProfessionalDashboardScreen from '../screens/professional/ProfessionalDashboardScreen';
-import ProfessionalPortfolioPlaceholderScreen from '../screens/professional/placeholders/ProfessionalPortfolioPlaceholderScreen';
+import ProfessionalPortfolioScreen from '../screens/professional/ProfessionalPortfolioScreen';
 import ProfessionalVerificationScreen from '../screens/professional/ProfessionalVerificationScreen';
 import ProfessionalServiceSelectionScreen from '../screens/professional/ProfessionalServiceSelectionScreen';
 import ProfessionalCertificateUploadScreen from '../screens/professional/ProfessionalCertificateUploadScreen';
@@ -39,7 +39,7 @@ export default function ProfessionalStackNavigator() {
       />
       <Stack.Screen
         name="ProfessionalPortfolioPlaceholder"
-        component={ProfessionalPortfolioPlaceholderScreen}
+        component={ProfessionalPortfolioScreen}
       />
       <Stack.Screen
         name="ProfessionalVerificationPlaceholder"

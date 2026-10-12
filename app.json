@@ -35,7 +35,8 @@
         {
           "locationWhenInUsePermission": "Lookify usa tu ubicación en primer plano para mostrarte como disponible a clientes cercanos."
         }
-      ]
+      ],
+      "expo-video"
     ]
   }
 }
