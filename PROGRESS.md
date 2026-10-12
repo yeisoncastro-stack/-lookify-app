@@ -4,8 +4,8 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** siguiente pantalla
-pro (por definir en producto).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantallas pro 1 a 10
+completas; el siguiente paso (Admin Web o los pendientes de negocio) lo define el dueño del proyecto.
 
 **Commits recientes:** `7db63d8` — feat(pro) pantalla 10 historial de ingresos (`main`) ·
 `31a2da9` — feat(pro) pantalla 9 servicio en curso (`main`) · `3c5cc99` — docs(pro) contrato
@@ -164,7 +164,7 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 8. Solicitud entrante (ventana de 30 s) — **verificada en celular USB** (pruebas 1–8 y
    regresión toggle; pruebas 9–10 no verificables a mano con la app actual)
 9. Servicio en curso (En camino, Llegué, Iniciado + ingreso PIN del cliente) — **verificada en celular USB** (13 pruebas)
-10. Historial/ingresos — **siguiente en implementación**
+10. Historial/ingresos — **verificada en celular USB** (12 pruebas)
 
 ### App Profesional — 10 pantallas oficiales (sin renumerar)
 
@@ -273,7 +273,7 @@ backend revalida IDs contra el catálogo).
 - **(a)** Matching: filtrar por `servicioIds` del profesional, no solo categoría — tarea
   aparte + prueba USB (no tocar `MatchingScreen` / `mockProfessionals` hasta entonces).
 - **(b)** Editar servicios ofrecidos después del onboarding.
-- **(d)** Ajuste de precio ±20 % por servicio — **pendiente** (se resuelve con la pantalla 10).
+- **(d)** Ajuste de precio ±20 % por servicio — **aplazado** (no implementado; pendiente backend/producto).
 
 **Verificada en celular USB.**
 
@@ -615,7 +615,7 @@ llama a registrar. Ítems **inmutables** tras registrarse.
 | 7 Mi portafolio | `getProfessionalPortfolioService()` | GET/POST/PATCH/DELETE portafolio · POST portada/reorden — **mock** |
 | 8 Solicitud entrante | `getProfessionalIncomingRequestService()` | WebSocket/push + GET activa · POST aceptar/rechazar — **mock** |
 | 9 Servicio en curso | `getProfessionalServiceInProgressService()` | GET servicio-activo · POST llegada/validar-pin/cancelar/finalizar — **mock** |
-| 10 Historial / ingresos | `getProfessionalEarningsHistoryService()` | GET resumen-periodo · GET historial (cursor) — **mock**; registro al finalizar/cancelar en pantalla 9 |
+| 10 Historial / ingresos | `getProfessionalEarningsHistoryService()` | GET `/me/historial-ingresos/resumen` · GET `/me/historial-ingresos` (cursor) — **mock**; registro al finalizar/cancelar en pantalla 9 |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
 
@@ -809,10 +809,10 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
 - Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` según
   `estadoSolicitud`, `onboardingPaso` y `profesionalActivado`.
-- Stack pro: pantallas 3–9 implementadas; rutas legacy 4–7 y 9 (`…UploadPlaceholder`,
+- Stack pro: pantallas 3–10 implementadas; rutas legacy 4–7 y 9 (`…UploadPlaceholder`,
   `…VerificationPlaceholder`, `…DashboardPlaceholder`, `…PortfolioPlaceholder`,
-  `ProfessionalServiceInProgressPlaceholder` con pantalla real).
-  Siguiente: pantalla 10 Historial/ingresos.
+  `ProfessionalServiceInProgressPlaceholder` con pantalla real). Pantalla 10:
+  **`ProfessionalEarningsHistory`** (sin sufijo Placeholder).
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:

@@ -1,4 +1,4 @@
-# Contratos backend — App Profesional (pantallas 3–9)
+# Contratos backend — App Profesional (pantallas 3–10)
 
 Documento de referencia para implementación server-side. El frontend mock valida las mismas reglas; el servidor **debe revalidar todo**.
 
@@ -352,6 +352,9 @@ Requisito transversal: mismo JWT (**aprobado + activado**). Ruta frontend
 **`ProfessionalEarningsHistory`**. Entrada desde el panel (**«Mis ingresos»**); compatible con
 servicio en curso activo.
 
+**Semilla demo:** `sembrarHistorialDemo` y el flag **`origenSemilla`** existen **solo en desarrollo**
+(`__DEV__` / entornos no productivos) y **nunca en producción**.
+
 Cada respuesta incluye **`ahoraServidor`** (ISO8601). Límites de **Hoy / Semana / Mes** se calculan
 en **hora Bogotá (UTC−5 fijo)**, no con la zona del dispositivo. **Semana:** lunes 00:00:00 a
 domingo 23:59:59 (inclusive) en calendario Bogotá.
@@ -363,13 +366,15 @@ domingo 23:59:59 (inclusive) en calendario Bogotá.
 - **Domicilio:** 100 % del profesional (no entra en la base de comisión).
 - **`precioTotalCop = precioBaseCop + precioDomicilioCop`**.
 - **Neto profesional = `precioTotalCop − comisión`** (solo servicios finalizados).
+- El **servidor** calcula y persiste `comisionCop`, `netoCop`, `comisionEfectivoCop` y los montos de
+  cada ítem; la app **solo muestra** los valores del API y **NUNCA recalcula** comisión ni neto.
 - **Ajuste ±20 %** sobre precio base: **aplazado** (no implementado en frontend).
 - En **efectivo**, la UI muestra comisión **informativa** («Debes a Lookify» por servicio; total de
   comisión en efectivo en el resumen). **Sin** saldo global, cobro automático, bloqueo de cuenta ni
   botón de pago en esta fase — **regla de cobro del efectivo pendiente** en backend/finanzas.
 - **Digital:** **pago al profesional** de lo cobrado (neto) — timing, retenciones y pasarela **TBD**.
 
-### GET `/api/v1/profesionales/me/ingresos/resumen`
+### GET `/api/v1/profesionales/me/historial-ingresos/resumen`
 
 - **Query:** `periodo=HOY|SEMANA|MES`.
 - **Respuesta 200:** `{ resumen: ResumenPeriodoHistorial, ahoraServidor }`.
@@ -378,7 +383,7 @@ domingo 23:59:59 (inclusive) en calendario Bogotá.
   efectivo). Los **cancelados solo incrementan `cantidadCancelados`**; no suman dinero.
 - **Errores:** `400` `PERIODO_INVALIDO`, `403` `PROFESIONAL_NO_HABILITADO`.
 
-### GET `/api/v1/profesionales/me/ingresos/historial`
+### GET `/api/v1/profesionales/me/historial-ingresos`
 
 - **Query:** `periodo=HOY|SEMANA|MES`, `cursor` opcional, `limit` (default 20, max 50).
 - **Respuesta 200:** `{ items: HistorialIngresosItem[], nextCursor, ahoraServidor }`.
@@ -416,3 +421,4 @@ domingo 23:59:59 (inclusive) en calendario Bogotá.
 - **Cancelaciones del cliente** después de aceptación mutua: visibilidad en historial, métricas y
   posible impacto en rating/disponibilidad.
 - Unificar **semilla/demo** (`origenSemilla`) solo entornos no productivos.
+- **Revisión legal y fiscal** (facturación, retenciones, comprobantes de comisión en efectivo y digital).
