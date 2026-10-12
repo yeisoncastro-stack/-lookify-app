@@ -4,8 +4,11 @@
 subido a GitHub (`e0696de` en `main`). Siguiente bloque: **App Profesional**, construida
 **pantalla por pantalla** (una pantalla por turno; el wizard de 4 pasos en una sola
 pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalApp`
-(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 7
-(Mi portafolio).
+(Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantalla 8
+(Solicitud entrante, ventana de 30 s).
+
+**Commits recientes (`main`):** `f71d7a9` — feat(pro) pantalla 7 Mi portafolio ·
+`1232f39` — docs(pro) contratos backend panel principal.
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -156,8 +159,8 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 4. Carga de certificados — **verificada en celular USB**
 5. Estado de verificación — **verificada en celular USB**
 6. Panel principal (toggle Disponible/Ocupado) — **verificada en celular USB**
-7. Mi portafolio — **siguiente en implementación**
-8. Solicitud entrante (ventana de 30 s)
+7. Mi portafolio — **verificada en celular USB**
+8. Solicitud entrante (ventana de 30 s) — **siguiente en implementación**
 9. Servicio en curso (ingreso PIN del cliente)
 10. Historial/ingresos
 
@@ -172,7 +175,7 @@ _(Tipo de cuenta = pantalla compartida del cliente; no cuenta en esta lista.)_
 7. Panel principal (con toggle Disponible/Ocupado)
 8. Solicitud entrante (ventana de 30 s)
 9. Servicio en curso (con ingreso del PIN del cliente)
-10. Historial/ingresos (con gestión de portafolio)
+10. Historial/ingresos
 
 ### App Profesional — Login (pantalla 1 provisional)
 
@@ -183,8 +186,7 @@ Ingresar | Registrarme; validación como cliente (`validators.ts`); login vía
 `getProfessionalAuthService()` (mock en `src/services/mock/`). Tras login,
 `resolvePostLoginRoute` + `resetProfessionalSession` con params de sesión tipados según
 `estadoSolicitud`, `onboardingPaso` y `profesionalActivado` (onboarding 3–5, panel 6 o
-verificación 5). Placeholder «sin construir»: **`ProfessionalPortfolioPlaceholder`**
-(pantalla 7). **Registrarme** navega a `RegisterProfessional`.
+verificación 5). **Registrarme** navega a `RegisterProfessional`.
 **Verificada en celular USB.**
 
 Cuentas demo (mock): `pro.aprobado@lookify.test`, `pro.revision@lookify.test`,
@@ -383,6 +385,50 @@ cierre → Ocupado, regresión StarRating cliente).
 **Backend pendiente (pantalla 6):** ver `docs/contratos-backend-profesional.md` (panel, foto,
 disponibilidad, reseñas, ubicación futura).
 
+### App Profesional — Mi portafolio (pantalla 7)
+
+`ProfessionalPortfolioScreen.tsx` registrada bajo la ruta **`ProfessionalPortfolioPlaceholder`**
+(deuda de nombre: el identificador sigue diciendo «Placeholder»). Entrada desde el panel:
+**Mi portafolio** → `navigate` (solo atrás, sin cerrar sesión).
+
+**Reglas de producto (portafolio opcional):** no hay mínimo de fotos ni videos; el **matching
+del cliente no filtra** por portafolio. **No hay revisión previa del admin** para publicar
+trabajos (solo se aprueban **certificados** en onboarding). **Portada** = foto con **orden 0**
+(`esPortada` en UI); **reordenar** fotos y videos por separado con botones mover antes/después
+(sin drag). **Descripción** opcional, máx. **100** caracteres (trim en servicio). **Servicio
+asociado** opcional, limitado a los `servicioIds` del profesional (`VALIDATION` si no pertenece).
+
+**Límites:** hasta **10** fotos (JPG/PNG, **5 MB**, `quality` **0,7**, sin recorte forzado);
+hasta **4** videos (MP4/MOV, **50 MB**, máx. **30 s**). **Aviso informativo** (texto fijo) si
+hay **menos de 3 fotos**; no bloquea. **Videos:** solo galería; tarjeta con ícono play; preview
+con **`expo-video`** en modal **al tocar** (probado en **Expo Go**); plugin `expo-video` en
+`app.json`.
+
+Servicio **`getProfessionalPortfolioService()`** (mock en memoria por `profesionalId`):
+`obtenerPortafolio`, `listarServiciosAsociables`, `agregarFoto`, `agregarVideo`, `actualizarItem`,
+`eliminarItem`, `reemplazarArchivo`, `moverItem`, `definirPortada`. Errores:
+`LIMITE_FOTOS_PORTAFOLIO`, `LIMITE_VIDEOS_PORTAFOLIO`, `ITEM_PORTAFOLIO_NO_ENCONTRADO`,
+`VIDEO_DURACION_EXCEDIDA`, más reutilizados (`ARCHIVO_INVALIDO`, `ARCHIVO_MUY_GRANDE`,
+`PROFESIONAL_NO_HABILITADO`, `VALIDATION`, etc.).
+
+**Semilla mock:** portafolio **vacío** para `pro-demo-aprobado` y `pro-demo-aprobado-nuevo`; **se
+pierde al recargar** la app (mapa en memoria, no muta cuentas semilla).
+
+**Verificada en celular USB** (vacío + aviso, fotos galería/cámara, portada, reemplazar, límites,
+video galería + preview, servicio asociado).
+
+**Deudas / follow-ups:**
+- **(a) Oferta cliente:** hoy `ProfessionalOfferScreen` no muestra el portafolio real (IDs en
+  `mockProfessionals` ≠ `pro-demo-*`). Cambio mínimo propuesto: `obtenerPortafolioPublicoParaOferta`
+  en capa servicios — `Image` si hay `uri`, ícono actual si no, copy «Este profesional aún no ha
+  publicado trabajos» si la lista está vacía.
+- **(b) Guard explícito** de `solicitudId` en cada handler de picker (evitar `params.solicitudId!`).
+- **(c) Nombre de rutas:** `ProfessionalPortfolioPlaceholderScreen.tsx` sin uso; rutas con
+  sufijo **Placeholder** en pantallas 4, 5, 6 y 7 (refactor de nombres pendiente).
+
+**Backend pendiente (pantalla 7):** ver `docs/contratos-backend-profesional.md` (CRUD portafolio,
+moderación a posteriori).
+
 **Contrato de servicios (resto; HTTP no implementado):**
 
 | Pantalla pro | Función servicio | HTTP previsto (TBD) |
@@ -392,6 +438,7 @@ disponibilidad, reseñas, ubicación futura).
 | 4 Certificados | `getProfessionalCertificateService()` · ver métodos arriba | GET/POST/PATCH/DELETE certificados · POST enviar-verificacion — **mock** |
 | 5 Estado verificación | `getProfessionalVerificationService()` | GET estado · POST corregir · POST reenviar/validar código — **mock** |
 | 6 Panel principal | `getProfessionalDashboardService()` | GET panel · PATCH disponibilidad · POST foto — **mock** |
+| 7 Mi portafolio | `getProfessionalPortfolioService()` | GET/POST/PATCH/DELETE portafolio · POST portada/reorden — **mock** |
 
 Estados de solicitud: `DOCUMENTOS_PENDIENTES`, `EN_REVISION`, `APROBADO`, `RECHAZADO`.
 
@@ -409,8 +456,8 @@ Las pantallas pro hablan solo con `src/services/` (interfaz + mock + `ServiceErr
 No importan `mockUsers`, `mockProfessionals` ni seeds directamente. Punto de entrada:
 `getProfessionalAuthService()`, `getProfessionalRegistrationService()`,
 `getProfessionalCertificateService()`, `getProfessionalVerificationService()`,
-`getProfessionalDashboardService()` (implementación intercambiable). Login y registro pro
-ya siguen este patrón.
+`getProfessionalDashboardService()`, `getProfessionalPortfolioService()` (implementación
+intercambiable). Login y registro pro ya siguen este patrón.
 
 ### Navegación App Profesional (stack separado)
 El `RootStackParamList` del cliente expone solo `ProfessionalApp` hacia el flujo pro.
@@ -584,9 +631,9 @@ Expo Go → Reload, o cerrar y reabrir la app).
 - Lectura legal: `ProfessionalTermsRead`, `ProfessionalPrivacyRead` (dentro del stack pro).
 - Login Pro → ingreso OK → `resetProfessionalSession` vía `resolvePostLoginRoute` según
   `estadoSolicitud`, `onboardingPaso` y `profesionalActivado`.
-- Stack pro: pantallas 3–6 implementadas; rutas legacy 4–6 (`…UploadPlaceholder`,
-  `…VerificationPlaceholder`, `…DashboardPlaceholder`); placeholder sin construir:
-  `ProfessionalPortfolioPlaceholder` (pantalla 7).
+- Stack pro: pantallas 3–7 implementadas; rutas legacy 4–7 (`…UploadPlaceholder`,
+  `…VerificationPlaceholder`, `…DashboardPlaceholder`, `…PortfolioPlaceholder` con pantalla real).
+  Siguiente: pantalla 8 Solicitud entrante.
 
 ### Registro de profesional
 Pantalla 2 provisional reconstruida (`RegisterProfessionalScreen.tsx`). Entrada:
@@ -701,7 +748,7 @@ de deuda y/o tope de deuda que bloquea aceptar nuevos servicios en efectivo.
   datos personales, Selección de servicios, Carga de certificados, Estado de
   verificación, Panel principal (con toggle Disponible/Ocupado), Solicitud
   entrante (ventana de 30 s), Servicio en curso (con ingreso del PIN del cliente),
-  Historial/ingresos (con gestión de portafolio). La pantalla **«Servicio en curso»**
+  Historial/ingresos. La pantalla **«Servicio en curso»**
   exige el PIN del cliente antes de pasar a INICIADO (alineado con la pantalla 9).
 - Las duraciones y precios de `mockServices.ts` son **oficiales**. Catálogo vigente:
 

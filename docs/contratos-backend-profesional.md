@@ -1,4 +1,4 @@
-# Contratos backend — App Profesional (pantallas 3–6)
+# Contratos backend — App Profesional (pantallas 3–7)
 
 Documento de referencia para implementación server-side. El frontend mock valida las mismas reglas; el servidor **debe revalidar todo**.
 
@@ -96,3 +96,63 @@ Requisito transversal: endpoints del panel exigen JWT de profesional con **`esta
 - **Uso previsto:** enviar posición cuando el profesional está **DISPONIBLE** (tras permiso en app); rate limit y retención acotada (política de datos).
 - **Nota MVP frontend:** hoy solo se verifica permiso; **no** implementar en app hasta acordar frecuencia y privacidad.
 - **Errores:** `403` si no habilitado o no disponible, `400` `VALIDATION`.
+
+## Pantalla 7 — Mi portafolio
+
+Requisito transversal: mismo JWT que el panel (**aprobado + activado**). Cada profesional solo
+puede leer y mutar **su** portafolio (`profesionalId` del token). El servidor **revalida** límites,
+MIME/tamaño/duración y que `servicioId` (si viene) pertenezca a los servicios ofrecidos por ese
+profesional.
+
+### GET `/api/v1/profesionales/me/portafolio`
+- **Respuesta 200:** `{ fotos: PortfolioItem[], videos: PortfolioItem[], limites: { maxFotos, maxVideos, … } }`.
+- **Item:** `id`, `tipo` (`FOTO` | `VIDEO`), `orden`, `descripcion?`, `servicioId?`, URLs firmadas
+  (`url`, `miniaturaUrl?` solo si aplica), metadatos no sensibles (`duracionSeg?` en video).
+- **Portada:** foto con `orden === 0` (servidor mantiene invariante al mover/definir portada).
+- **Errores:** `403` `PROFESIONAL_NO_HABILITADO`.
+
+### POST `/api/v1/profesionales/me/portafolio/fotos` (multipart)
+- **Validación servidor:** JPG/PNG, MIME **real** (magic bytes), máx. **5 MB**; máx. **10** fotos
+  por profesional (`LIMITE_FOTOS_PORTAFOLIO`).
+- **Errores:** `400` `ARCHIVO_INVALIDO`, `ARCHIVO_MUY_GRANDE`, `LIMITE_FOTOS_PORTAFOLIO`.
+
+### POST `/api/v1/profesionales/me/portafolio/videos` (multipart)
+- **Validación servidor:** MP4/MOV, MIME real, máx. **50 MB**, duración máx. **30 s** medida en
+  servidor (`VIDEO_DURACION_EXCEDIDA`); máx. **4** videos (`LIMITE_VIDEOS_PORTAFOLIO`).
+- **Errores:** `400` `ARCHIVO_INVALIDO`, `ARCHIVO_MUY_GRANDE`, `VIDEO_DURACION_EXCEDIDA`,
+  `LIMITE_VIDEOS_PORTAFOLIO`.
+
+### PATCH `/api/v1/profesionales/me/portafolio/items/:itemId`
+- **Body:** `{ descripcion?: string | null, servicioId?: string | null }` — descripción máx. 100
+  caracteres; `servicioId` debe estar en servicios del profesional o `null` para quitar.
+- **Errores:** `404` `ITEM_PORTAFOLIO_NO_ENCONTRADO`, `400` `VALIDATION`.
+
+### PUT `/api/v1/profesionales/me/portafolio/items/:itemId/archivo` (multipart)
+- Reemplaza archivo conservando `id`, orden, descripción y `servicioId`; **no** incrementa conteo
+  de ítems; mismas validaciones que POST según tipo.
+- **Errores:** como POST foto/video según tipo.
+
+### POST `/api/v1/profesionales/me/portafolio/items/:itemId/mover`
+- **Body:** `{ direccion: "ARRIBA" | "ABAJO" }` — solo dentro del mismo tipo (fotos vs videos).
+- **Errores:** `404` `ITEM_PORTAFOLIO_NO_ENCONTRADO`, `400` `VALIDATION`.
+
+### POST `/api/v1/profesionales/me/portafolio/fotos/:itemId/portada`
+- Pasa la foto a **orden 0** y renumera el resto sin huecos.
+- **Errores:** `404`, `400` si no es foto.
+
+### DELETE `/api/v1/profesionales/me/portafolio/items/:itemId`
+- Si se elimina la portada, la siguiente foto pasa a orden 0.
+- **Errores:** `404` `ITEM_PORTAFOLIO_NO_ENCONTRADO`.
+
+### Moderación a posteriori (producto + legal)
+
+- **No hay revisión previa** del admin para publicar fotos/videos en el portafolio (distinto de
+  certificados en onboarding).
+- El **cliente** podrá **reportar** un elemento del portafolio; el **admin** lo revisa en
+  **«Reportes y reseñas»** y puede **eliminar** el ítem o **suspender** el portafolio del
+  profesional.
+- Los **términos de uso** deben prohibir contenido ilegal u ofensivo (redacción final por abogado
+  real, no borrador de frontend).
+- **Operaciones técnicas recomendadas:** escaneo antivirus/malware en upload, almacenamiento de
+  medios en bucket privado con URLs firmadas de corta vigencia, auditoría de reportes y acciones
+  admin, retención y borrado al eliminar cuenta (política de datos TBD).
