@@ -472,11 +472,13 @@ Estado de ruta para deduplicar aperturas: **`professionalSessionFromState.ts`** 
 **Verificada en celular USB** (pruebas 1–8 documentadas en turno de QA + regresión toggle Disponible/Ocupado).
 
 **Deudas / follow-ups (pantalla 8):**
-- **(a)** Pruebas USB **9** (solicitud sobre **Mi portafolio**) y **10** (DEMO deshabilitado con
-  solicitud activa) **no verificables a mano**; para probar la 9, agregar botón DEMO temporal en
-  portafolio si se desea.
+- **(a)** Pruebas USB **9** (solicitud entrante mientras el pro está en **Mi portafolio**) y **10**
+  (DEMO deshabilitado con solicitud activa) **no verificadas a mano**. La pantalla 9 pro se probó por
+  el flujo normal (panel → solicitud → cliente acepta). Opcional futuro: DEMO en portafolio solo para
+  repetir la prueba 9.
 - **(b)** Listener usa **polling** de disponibilidad; backend → evento push/WebSocket.
-- **(c)** Comisión **15 % visible** al profesional y ajuste **±20 %** se resuelven con la pantalla 10.
+- **(c)** La comisión del 15 % sigue oculta al profesional; con la pantalla 10 se decide si se le
+  muestra. El ajuste de precio ±20 % también se resuelve con la pantalla 10.
 - **(d)** La pantalla 9 real ya está montada en **`ProfessionalServiceInProgressPlaceholder`**; el sufijo Placeholder de la ruta sigue como deuda de nombre.
 - **(e)** La solicitud solo llega con la **app abierta**; **notificaciones push** en fase backend.
 
@@ -864,7 +866,7 @@ de deuda y/o tope de deuda que bloquea aceptar nuevos servicios en efectivo.
   verificación, Panel principal (con toggle Disponible/Ocupado), Solicitud
   entrante (ventana de 30 s), Servicio en curso (con ingreso del PIN del cliente),
   Historial/ingresos. La pantalla **«Servicio en curso»**
-  exige el PIN del cliente antes de pasar a INICIADO (alineado con la pantalla 9).
+  exige el PIN del cliente antes de pasar a INICIADO (en la pantalla 9 del profesional se escribe el PIN; en el mock el PIN del cliente y el del profesional aún son distintos, el backend generará uno solo).
 - Las duraciones y precios de `mockServices.ts` son **oficiales**. Catálogo vigente:
 
 | Categoría | Servicio | Precio (COP) | Duración (min) |
