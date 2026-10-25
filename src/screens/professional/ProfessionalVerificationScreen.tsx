@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   logoutLink: {
     marginTop: spacing.md,
     fontSize: 13,
-    color: colors.honey,
+    color: colors.sand,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.honey,
+    borderColor: colors.sand,
   },
   demoBadge: {
     fontSize: 11,

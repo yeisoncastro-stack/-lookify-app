@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 4,
-    backgroundColor: colors.honey,
+    backgroundColor: colors.sand,
   },
   profileRow: {
     flexDirection: 'row',

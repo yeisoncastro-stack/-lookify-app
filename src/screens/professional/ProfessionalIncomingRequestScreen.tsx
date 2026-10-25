@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   timerValue: {
-    color: colors.honey,
+    color: colors.sand,
     fontSize: 36,
     fontWeight: '700',
     marginTop: spacing.xs,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.lg,
     borderLeftWidth: 4,
-    borderLeftColor: colors.honey,
+    borderLeftColor: colors.sand,
   },
   serviceName: {
     fontSize: 20,

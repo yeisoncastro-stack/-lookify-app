@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.full,
-    backgroundColor: colors.honey,
+    backgroundColor: colors.sand,
     alignItems: 'center',
     justifyContent: 'center',
   },

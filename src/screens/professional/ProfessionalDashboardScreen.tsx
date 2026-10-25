@@ -491,7 +491,7 @@ export default function ProfessionalDashboardScreen({ navigation, route }: Props
                 value={disponible}
                 onValueChange={handleToggleDisponibilidad}
                 disabled={toggleBusy}
-                trackColor={{ false: colors.textSecondary, true: colors.honey }}
+                trackColor={{ false: colors.textSecondary, true: colors.sand }}
                 thumbColor={colors.white}
                 accessibilityRole="switch"
                 accessibilityLabel="Disponible u ocupado"
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: colors.overlayAvatar,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   },
   cardDisponible: {
     borderWidth: 2,
-    borderColor: colors.honey,
+    borderColor: colors.sand,
   },
   cardOcupado: {
     borderWidth: 2,

@@ -166,11 +166,11 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 22,
     fontWeight: '600',
-    color: colors.honeyLight,
+    color: colors.sandLight,
   },
   tagline: {
     fontSize: 14,
-    color: colors.honey,
+    color: colors.sand,
     marginTop: spacing.sm,
     textAlign: 'center',
     paddingHorizontal: spacing.md,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   forgot: {
     fontSize: 12,
-    color: colors.honey,
+    color: colors.sand,
     fontWeight: '600',
   },
   loginError: {

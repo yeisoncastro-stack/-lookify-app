@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   logoutLink: {
     marginTop: spacing.md,
     fontSize: 13,
-    color: colors.honey,
+    color: colors.sand,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },

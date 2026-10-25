@@ -203,7 +203,7 @@ export default function MatchingScreen({ navigation, route }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Animated.View style={[styles.iconWrap, { transform: [{ scale: pulseAnim }] }]}>
-          <MaterialCommunityIcons name="magnify" size={56} color={colors.honeyLight} />
+          <MaterialCommunityIcons name="magnify" size={56} color={colors.sandLight} />
         </Animated.View>
 
         {!showSpecialOptions ? (
@@ -216,7 +216,7 @@ export default function MatchingScreen({ navigation, route }: Props) {
                   <MaterialCommunityIcons
                     name={done ? 'check-circle' : 'circle-outline'}
                     size={22}
-                    color={done ? colors.honey : colors.textOnNavyMuted}
+                    color={done ? colors.sand : colors.textOnNavyMuted}
                   />
                   <Text style={[styles.checkText, done && styles.checkTextDone]}>{text}</Text>
                 </View>

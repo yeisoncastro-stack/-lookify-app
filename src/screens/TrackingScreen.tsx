@@ -254,7 +254,7 @@ export default function TrackingScreen({ navigation, route }: Props) {
           coordinate={proCoord}
           title={professional.nombre}
           description="En camino"
-          pinColor={colors.honey}
+          pinColor={colors.sand}
         />
       </MapView>
 

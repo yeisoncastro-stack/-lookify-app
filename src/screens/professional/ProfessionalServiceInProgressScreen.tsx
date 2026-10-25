@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.honey,
+    backgroundColor: colors.sand,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   reasonRowSelected: {
-    borderColor: colors.honey,
+    borderColor: colors.sand,
     backgroundColor: colors.beige,
   },
   radio: {
@@ -777,8 +777,8 @@ const styles = StyleSheet.create({
     borderColor: colors.navy,
   },
   radioSelected: {
-    backgroundColor: colors.honey,
-    borderColor: colors.honey,
+    backgroundColor: colors.sand,
+    borderColor: colors.sand,
   },
   reasonLabel: {
     flex: 1,
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
   },
   demoBox: {
     borderWidth: 1,
-    borderColor: colors.honey,
+    borderColor: colors.sand,
     borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
   },
   demoTitle: {
     fontWeight: '700',
-    color: colors.honey,
+    color: colors.sand,
     fontSize: 13,
   },
   demoPin: {

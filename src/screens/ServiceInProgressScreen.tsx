@@ -235,7 +235,7 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <MaterialCommunityIcons name="timer-outline" size={56} color={colors.honeyLight} />
+        <MaterialCommunityIcons name="timer-outline" size={56} color={colors.sandLight} />
 
         <Text style={styles.title}>{servicio.nombre}</Text>
         <Text style={styles.subtitle}>Duración acordada: {duracionLabel}</Text>
@@ -287,7 +287,7 @@ export default function ServiceInProgressScreen({ navigation, route }: Props) {
                 <MaterialCommunityIcons
                   name={done ? 'check-circle' : 'circle-outline'}
                   size={22}
-                  color={done ? colors.honey : colors.textOnNavyMuted}
+                  color={done ? colors.sand : colors.textOnNavyMuted}
                 />
                 <Text style={[styles.checkText, done && styles.checkTextDone]}>{label}</Text>
               </View>
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   pinDigit: {
     fontSize: 40,
     fontWeight: '700',
-    color: colors.honey,
+    color: colors.sand,
     letterSpacing: 2,
     minWidth: 36,
     textAlign: 'center',
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: colors.honey,
+    backgroundColor: colors.sand,
     borderRadius: radius.full,
   },
   progressLabel: {

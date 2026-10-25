@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   logoutLink: {
     marginTop: spacing.md,
     fontSize: 13,
-    color: colors.honey,
+    color: colors.sand,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.lg,
     borderLeftWidth: 4,
-    borderLeftColor: colors.honey,
+    borderLeftColor: colors.sand,
   },
   avisoRechazoTitle: { fontSize: 13, fontWeight: '600', color: colors.navy, marginBottom: spacing.xs },
   avisoRechazoText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },

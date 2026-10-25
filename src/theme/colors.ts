@@ -1,29 +1,38 @@
 // src/theme/colors.ts
-// Paleta oficial de Lookify — definida en el sistema de diseño del Lab 2.
-// Cualquier pantalla nueva debe usar estos colores, nunca valores sueltos.
+// Paleta Lookify — Opción C (verde petróleo + arena).
+// Usa siempre estos tokens; no escribas hex/rgba sueltos en pantallas.
 
 export const colors = {
-  // Primario — barras de navegación, botones principales, marca
-  navy: '#0F2A4A',
-  navyLight: '#1B3A5C',
+  // Principal — cabeceras, fondos oscuros, botones primary, mapa (cliente)
+  navy: '#1F4E5A',
+  navyLight: '#2E6A77',
 
-  // Acento — calificaciones, botones de acción destacada, badges
+  // Calificación — estrellas y reseñas únicamente (no usar para botones ni badges)
   honey: '#D9A441',
   honeyLight: '#F5C349',
 
+  // Acento arena — botones accent, badges, chips, barras de progreso, enlaces destacados
+  sand: '#E2BE99',
+  sandLight: '#EBD2B4',
+
   // Fondos y neutros
   white: '#FFFFFF',
-  beige: '#F4F1EC',
-  border: '#E4E1D8',
+  beige: '#FBF6EE',
+  border: '#E8DCCB',
 
   // Texto
   textPrimary: '#1E1E1E',
-  textSecondary: '#7A7A76',
+  textSecondary: '#6B6A66',
   textMuted: '#B9B7AE',
   textOnNavy: '#FFFFFF',
-  textOnNavyMuted: '#B9C6D6',
+  textOnNavyMuted: '#BFD6DA',
 
-  // Estados
+  // Overlays (modales, avatar, video)
+  overlayPrimary: 'rgba(31, 78, 90, 0.45)',
+  overlayDark: 'rgba(0, 0, 0, 0.92)',
+  overlayAvatar: 'rgba(0, 0, 0, 0.35)',
+
+  // Estados (feedback; independientes de la paleta de marca)
   success: '#2E7D32',
   error: '#C62828',
 };

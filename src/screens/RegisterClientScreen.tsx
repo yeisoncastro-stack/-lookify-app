@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   dateDoneText: {
-    color: colors.honey,
+    color: colors.sand,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   link: {
-    color: colors.honey,
+    color: colors.sand,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
