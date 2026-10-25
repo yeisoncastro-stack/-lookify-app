@@ -7,9 +7,9 @@ pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalA
 (Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantallas pro 1 a 10
 completas; el siguiente paso (Admin Web o los pendientes de negocio) lo define el dueño del proyecto.
 
-**Commits recientes:** `7db63d8` — feat(pro) pantalla 10 historial de ingresos (`main`) ·
-`31a2da9` — feat(pro) pantalla 9 servicio en curso (`main`) · `3c5cc99` — docs(pro) contrato
-pantalla 8 (`main`).
+**Commits recientes:** `bf712fc` — feat(theme) paleta verde petróleo y arena (`main`) ·
+`7db63d8` — feat(pro) pantalla 10 historial de ingresos (`main`) · `31a2da9` — feat(pro)
+pantalla 9 servicio en curso (`main`).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -91,8 +91,9 @@ cancelar sin costo (sin checklist). Éxito → `replace('ProfessionalOffer', …
 `promptCancelarSolicitud`; «Seguir buscando» reanuda el checklist donde iba.
 
 ### 7. Oferta de profesional — `src/screens/ProfessionalOfferScreen.tsx`
-Fondo beige, tarjeta con acento honey: perfil, portafolio, reseña destacada y
-desglose vía `src/utils/pricing.ts` (`formatCOP`). `distanciaKm` de la ruta (1 decimal)
+Fondo beige, tarjeta blanca con banda superior (`sheetAccent`, 4 px) en `sand`; iconos de
+estrellas de la reseña en `honey`; perfil, portafolio, reseña destacada y desglose vía
+`src/utils/pricing.ts` (`formatCOP`). `distanciaKm` de la ruta (1 decimal)
 para UI, domicilio y params; ETA con `VELOCIDAD_ESTIMADA_KM_H` en `constants/geo.ts`
 (mín. 1 min). «Aceptar» → `replace('Tracking', …)` con `allowExitRef` antes del
 `replace`. «Buscar otro» → `allowExitRef` +
@@ -100,8 +101,8 @@ para UI, domicilio y params; ETA con `VELOCIDAD_ESTIMADA_KM_H` en `constants/geo
 sin costo). Datos inválidos → `reset` Home.
 
 ### 8. Seguimiento en vivo — `src/screens/TrackingScreen.tsx`
-Mapa **`MapView` + `PROVIDER_DEFAULT`** (no placeholder), marcadores cliente (navy) y
-profesional (honey). En Expo Go (Android) el mapa puede verse en blanco por la API key
+Mapa **`MapView` + `PROVIDER_DEFAULT`** (no placeholder), marcadores cliente (`navy`) y
+profesional (`sand`). En Expo Go (Android) el mapa puede verse en blanco por la API key
 embebida vencida (problema conocido, no es bug del código). Pill «En camino», tarjeta
 inferior con ETA/distancia animados (`MOCK_TRACKING_MS` 12 s), profesional + servicio,
 Llamar/Mensaje (Alert mock), «Cancelar servicio» y atrás/gesto con
@@ -122,7 +123,8 @@ hasta validar PIN (`promptCancelarServicio`); después, `alertServicioEnCurso`. 
 `replace('PaymentRating', …)` sin PIN en params. **Verificada en celular USB.**
 
 ### 10. Pago y calificación — `src/screens/PaymentRatingScreen.tsx`
-Fondo beige, tarjeta blanca: check «Servicio finalizado», nombre servicio/profesional,
+Fondo beige, tarjeta blanca: banda superior (`sheetAccent`, 4 px) e ícono `check-circle` en
+`sand`; `StarRating` en honey; título «Servicio finalizado», nombre servicio/profesional,
 desglose desde params con `formatCOP` (servicio + domicilio = total, sin comisión visible).
 Método de pago visual (Efectivo / Tarjeta / Nequi; default Efectivo), hint «Pago simulado
 en esta versión». `StarRating` obligatorio, comentario opcional (250 chars). «Enviar
@@ -686,6 +688,37 @@ Login dejó las tarjetas y el botón fuera de la pantalla.
 `react-native` (deprecado). `SafeAreaProvider` envuelve el `NavigationContainer`
 en `AppNavigator.tsx`, que es el montaje que documenta la librería y lo que da
 contexto a los hooks de insets.
+
+### Paleta de colores
+
+Fuente de verdad: `src/theme/colors.ts`. **Opción C — verde petróleo y arena** (pedida por el
+profesor como paleta más unisex). Implementada en código en **`bf712fc`** (`feat(theme): nueva
+paleta verde petróleo y arena`), verificada en celular USB.
+
+Los **nombres de clave** `navy`, `honey` y `beige` se mantienen por compatibilidad; el renombre
+semántico de tokens (p. ej. `navy` → nombre que refleje verde petróleo) queda **pendiente — Fase 2**.
+
+| Token | Hex / valor | Uso |
+|-------|-------------|-----|
+| `navy` | `#1F4E5A` | Principal: cabeceras, fondos oscuros, botones primary, pin cliente en mapa |
+| `navyLight` | `#2E6A77` | Variante principal (p. ej. tracks de progreso) |
+| `beige` | `#FBF6EE` | Fondo claro de pantallas |
+| `border` | `#E8DCCB` | Bordes y separadores |
+| `textSecondary` | `#6B6A66` | Texto secundario (contraste sobre beige) |
+| `textOnNavyMuted` | `#BFD6DA` | Texto atenuado sobre fondo `navy` |
+| `honey` | `#D9A441` | **Solo estrellas / calificación** (`StarRating`, estrellas en oferta) |
+| `honeyLight` | `#F5C349` | Sin uso actual en pantallas (solo definido en `src/theme/colors.ts`; acentos claros en UI usan `sandLight`) |
+| `sand` | `#E2BE99` | Acento arena: botones `accent`, badges, chips, enlaces, pin profesional en mapa |
+| `sandLight` | `#EBD2B4` | Acento claro sobre fondos `navy` (íconos, marca en login) |
+| `overlayPrimary` | `rgba(31, 78, 90, 0.45)` | Backdrop modales (portafolio) |
+| `overlayDark` | `rgba(0, 0, 0, 0.92)` | Fondo modal video |
+| `overlayAvatar` | `rgba(0, 0, 0, 0.35)` | Overlay foto en panel pro |
+
+Sin cambio en Fase 1: `white`, `textPrimary`, `textMuted`, `textOnNavy`, `success`, `error`.
+
+**Branding nativo:** en `app.json`, `android.adaptiveIcon.backgroundColor` pasó a **`#FBF6EE`**
+(alineado con `beige`). Los **PNG** del logo e iconos en `assets/` **no** se modificaron en este
+cambio.
 
 ### Categorías oficiales
 Coinciden con el catálogo del admin y no deben divergir:
