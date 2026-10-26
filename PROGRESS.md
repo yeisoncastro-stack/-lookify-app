@@ -7,9 +7,9 @@ pantalla quedó descartado). Entrada pro desde Tipo de cuenta → `ProfessionalA
 (Login Profesional dentro del stack pro). **Siguiente paso inmediato:** pantallas pro 1 a 10
 completas; el siguiente paso (Admin Web o los pendientes de negocio) lo define el dueño del proyecto.
 
-**Commits recientes:** `bf712fc` — feat(theme) paleta verde petróleo y arena (`main`) ·
-`7db63d8` — feat(pro) pantalla 10 historial de ingresos (`main`) · `31a2da9` — feat(pro)
-pantalla 9 servicio en curso (`main`).
+**Commits recientes:** `927e61f` — feat(brand) nuevo logo pin con tijeras (`main`) ·
+`bf712fc` — feat(theme) paleta verde petróleo y arena (`main`) ·
+`7db63d8` — feat(pro) pantalla 10 historial de ingresos (`main`).
 
 Fase actual: **frontend únicamente** (React Native + Expo SDK 57). El backend se
 construye después de cerrar todo el frontend. No hay autenticación real, base de
@@ -716,9 +716,35 @@ semántico de tokens (p. ej. `navy` → nombre que refleje verde petróleo) qued
 
 Sin cambio en Fase 1: `white`, `textPrimary`, `textMuted`, `textOnNavy`, `success`, `error`.
 
-**Branding nativo:** en `app.json`, `android.adaptiveIcon.backgroundColor` pasó a **`#FBF6EE`**
-(alineado con `beige`). Los **PNG** del logo e iconos en `assets/` **no** se modificaron en este
-cambio.
+**Branding nativo:** en `app.json`, `android.adaptiveIcon.backgroundColor` es **`#FBF6EE`**
+(alineado con `beige`). Los PNG de marca se actualizaron en **`927e61f`**; ver **Logo y marca** más abajo.
+
+### Logo y marca
+
+Identidad visual del pin con tijeras (sin ventana). Commit de código/assets: **`927e61f`**
+(`feat(brand): nuevo logo pin con tijeras`).
+
+**Archivos generados en `assets/`:** `icon.png`, `android-icon-foreground.png`,
+`android-icon-background.png`, `android-icon-monochrome.png`, `splash-icon.png`,
+`favicon.png` y `logo-lookify.png`.
+
+- **In-app:** `logo-lookify.png` — símbolo **crema** (`#FBF6EE`) sobre transparente, **96 px**
+  en cabecera verde petróleo (`navy`), en:
+  `LoginScreen`, `AccountTypeScreen`, `RegisterProfessionalScreen`, `ProfessionalLoginScreen`,
+  `ProfessionalServiceSelectionScreen`, `ProfessionalCertificateUploadScreen` y
+  `ProfessionalVerificationScreen`.
+- **Launcher e iconos nativos (por archivo):**
+  - `icon.png`: 1024×1024, símbolo verde petróleo `#1F4E5A` sobre fondo sólido crema `#FBF6EE`, sin transparencia.
+  - `android-icon-foreground.png`: símbolo verde petróleo sobre transparente, dentro del círculo seguro (máx. 337 px del centro).
+  - `android-icon-background.png`: plano sólido crema `#FBF6EE`.
+  - `android-icon-monochrome.png`: símbolo blanco sobre transparente.
+  - `splash-icon.png`: símbolo verde petróleo sobre transparente. **No** está enlazado en `app.json` (no hay plugin de splash).
+  - `favicon.png`: 48×48, verde petróleo sobre crema.
+- **Fuentes y regeneración:** `assets/brand/` (`logo-simple-source.png` activa;
+  `logo-source.png` histórico con ventana) y `scripts/generate-brand-assets.py` — ejecutar con
+  `py -3` (requiere **Pillow** y **numpy**); instrucciones en `assets/brand/README.md`.
+- **Expo Go:** solo se aprecia el logo in-app en cabeceras. El **ícono del launcher** y el
+  **splash nativo** no se ven en Expo Go; requieren **development build** o release.
 
 ### Categorías oficiales
 Coinciden con el catálogo del admin y no deben divergir:
